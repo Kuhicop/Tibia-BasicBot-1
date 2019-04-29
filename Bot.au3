@@ -50,7 +50,7 @@ FileWriteLine("log.txt", "LOGS FROM: " & _NowDate())
 FileClose("log.txt")
 
 ; Create console
-Global $text = "Team Fortress Bot"
+Global $text = "Tibia Classic Bot"
 Global $sphandle = SplashTextOn("", $text, 300, 40, ((@DesktopWidth / 2) - 150), 0, $DLG_NOTITLE, "Segoe UI", 9, 300)
 
 ; Focus game window to start botting
