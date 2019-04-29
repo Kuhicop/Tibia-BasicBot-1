@@ -31,7 +31,10 @@ $DiscardXY[0] = 0
 $DiscardXY[1] = 0
 
 ; DON'T TOUCH BELOW
-Global $running = True
+HotkeySet("{END}", "Leave")
+HotkeySet("{HOME}", "StartBotting")
+Global $running = False
+Global $botting = True
 Global $refXY[2]
 Global $HandXY[2]
 Global $blank_runesXY[2]
@@ -64,57 +67,60 @@ If Not WinActivate($window_name) Then
 	Exit
 EndIf
 
-While running
-	; ALERTS
-	If $alerts Then
-		If NOT find("battle_list") Then
-			If $logout Then
-				Send("^q")
-			EndIf
-			If $welcome Then
-				If $my_welcome_time >= $welcome_time Then
-					$msg_num = Random(0, 4, 1)
-					Send($welcome_msg[$msg_num])
-					$my_welcome_time = 0
+While $botting
+	While $running
+		; ALERTS
+		If $alerts Then
+			If NOT find("battle_list") Then
+				If $logout Then
+					Send("^q")
 				EndIf
-			EndIf
-		EndIf
-	EndIf
-
-	; EAT FOOD
-	If $eatfood Then
-		If $my_food_time == $food_time Then
-			If find($food) Then
-				MouseClick("right", $refXY[0], $refXY[1], 1, 10)
-				$my_food_time = 0
-			EndIf
-		EndIf
-	EndIf
-
-	; RUNEMAKER
-	If $runemaker Then
-		If $my_spell_time == $spell_time Then
-			If NOT $move_blanks Then
-				Send($spell & "{ENTER}")
-			Else
-				If NOT findpos("empty_hand", $HandXY[0], $HandXY[1]) Then
-					MouseClickDrag("left", $HandXY[0], $HandXY[1], $DiscardXY[0], $DiscardXY[1])
-				EndIf
-				If findpos("blank_rune", $blank_runesXY[0], $blank_runesXY[1]) AND findpos("empty_hand", $HandXY[0], $HandXY[1]) Then
-					MouseClickDrag("left", $blank_runesXY[0], $blank_runesXY[1], $HandXY[0], $HandXY[1])
-					If NOT find("empty_hand") Then
-						Send($spell & "{ENTER}")
+				If $welcome Then
+					If $my_welcome_time >= $welcome_time Then
+						$msg_num = Random(0, 4, 1)
+						Send($welcome_msg[$msg_num])
+						$my_welcome_time = 0
 					EndIf
 				EndIf
 			EndIf
 		EndIf
-	EndIf
 
-	Sleep(1000)
-	$my_food_time = $my_food_time + 1
-	$my_spell_time = $my_spell_time + 1
-	$my_welcome_time = $my_welcome_time + 1
+		; EAT FOOD
+		If $eatfood Then
+			If $my_food_time == $food_time Then
+				If find($food) Then
+					MouseClick("right", $refXY[0], $refXY[1], 1, 10)
+					$my_food_time = 0
+				EndIf
+			EndIf
+		EndIf
+
+		; RUNEMAKER
+		If $runemaker Then
+			If $my_spell_time == $spell_time Then
+				If NOT $move_blanks Then
+					Send($spell & "{ENTER}")
+				Else
+					If NOT findpos("empty_hand", $HandXY[0], $HandXY[1]) Then
+						MouseClickDrag("left", $HandXY[0], $HandXY[1], $DiscardXY[0], $DiscardXY[1])
+					EndIf
+					If findpos("blank_rune", $blank_runesXY[0], $blank_runesXY[1]) AND findpos("empty_hand", $HandXY[0], $HandXY[1]) Then
+						MouseClickDrag("left", $blank_runesXY[0], $blank_runesXY[1], $HandXY[0], $HandXY[1])
+						If NOT find("empty_hand") Then
+							Send($spell & "{ENTER}")
+						EndIf
+					EndIf
+				EndIf
+			EndIf
+		EndIf
+
+		Sleep(1000)
+		$my_food_time = $my_food_time + 1
+		$my_spell_time = $my_spell_time + 1
+		$my_welcome_time = $my_welcome_time + 1
+	WEnd
 WEnd
+
 
 
 
@@ -144,4 +150,12 @@ Func WriteLog($text)
 FileOpen("log.txt", 1)
 FileWriteLine("log.txt", _NowTime() & " -- " & $text)
 FileClose("log.txt")
+EndFunc
+
+Func StartBotting()
+running = True
+EndFunc
+
+Func Leave()
+Exit
 EndFunc
