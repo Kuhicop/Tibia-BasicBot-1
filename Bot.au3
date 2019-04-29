@@ -6,6 +6,8 @@
 ; Alerts
 Global $alerts = True
 Global $logout = True
+Global $welcome = True
+Global $welcome_time = 300
 
 ; Food
 Global $eatfood = True
@@ -16,15 +18,36 @@ Global $food = "Meat"
 Global $runemaker = True
 Global $spell = "utevo lux"
 Global $spell_time = 15
+Global $DiscardXY[2]
+; X/Y coords where the completed runes will be thrown
+; To get your coords check this https://github.com/Kuhicop/Mouse-Coords
+$DiscardXY[0] = 0
+$DiscardXY[1] = 0
 
 ; DON'T TOUCH BELOW
 Global $refXY[2]
+Global $HandXY[2]
+Global $blank_runesXY[2]
 Global $my_food_time = 0
 Global $my_spell_time = 0
+Global $my_welcome_time = 9999
+Global $welcome_msg[5]
+$welcome_msg[0] = ":P"
+$welcome_msg[1] = ":)"
+$welcome_msg[2] = "xd"
+$welcome_msg[3] = "^^"
+$welcome_msg[4] = ":D"
 
 ; FUNCTIONS
 Func find($image)
 If _FindImage(("img\" & $image & ".png"), $refXY[0], $refXY[1]) Then
+	return True
+Else
+	return False
+EndIf
+EndFunc
+Func findpos($image, ByRef $X, ByRef $Y)
+If _FindImage(("img\" & $image & ".png"), $X, $Y) Then
 	return True
 Else
 	return False
@@ -68,6 +91,13 @@ While 1
 			If $logout Then
 				Send("^q")
 			EndIf
+			If $welcome Then
+				If $my_welcome_time >= $welcome_time Then
+					$msg_num = Random(0, 4, 1)
+					Send($welcome_msg[$msg_num])
+					$my_welcome_time = 0
+				EndIf
+			EndIf
 		EndIf
 	EndIf
 	
@@ -86,6 +116,16 @@ While 1
 		If $my_spell_time == $spell_time Then
 			If NOT $move_blanks Then
 				Send($spell & "{ENTER}")
+			Else
+				If NOT findpos("empty_hand", $HandXY[0], $HandXY[1]) Then
+					MouseClickDrag("left", $HandXY[0], $HandXY[1], $DiscardXY[0], $DiscardXY[1])
+				EndIf
+				If findpos("blank_rune", $blank_runesXY[0], $blank_runesXY[1]) AND findpos("empty_hand", $HandXY[0], $HandXY[1]) Then
+					MouseClickDrag("left", $blank_runesXY[0], $blank_runesXY[1], $HandXY[0], $HandXY[1])
+					If NOT find("empty_hand") Then
+						Send($spell & "{ENTER}")
+					EndIf
+				EndIf
 			EndIf
 		EndIf
 	EndIf
@@ -93,4 +133,5 @@ While 1
 	Sleep(1000)
 	$my_food_time = $my_food_time + 1
 	$my_spell_time = $my_spell_time + 1
+	$my_welcome_time = $my_welcome_time + 1
 WEnd
