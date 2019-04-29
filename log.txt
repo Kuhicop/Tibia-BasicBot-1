@@ -1,0 +1,2 @@
+LOGS FROM: 29/04/2019
+14:52:16 -- Unable to find game window, game is closed.
