@@ -101,3 +101,19 @@ Else
 EndIf
 EndFunc
 #EndRegion ### END OF FIND IMAGE ###
+
+#Region ### FIND IMAGE WITH TOLERANCE START ###
+Func _FindImageWithTolerance($image, ByRef $x, ByRef $y, $tolerance, $transparency)
+$x=0
+$y=0
+$picture = $image
+
+$result = _ImageSearch($picture,1,$x,$y,$tolerance, $transparency)
+
+If $result = 1 Then
+	Return True
+Else
+	Return False
+EndIf
+EndFunc
+#EndRegion ### END OF FIND IMAGE WITH TOLERANCE ###
