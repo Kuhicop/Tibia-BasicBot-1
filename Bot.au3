@@ -244,6 +244,7 @@ Else
 	return False
 EndIf
 EndFunc
+
 Func findpos($image, ByRef $X, ByRef $Y)
 If _FindImage(("img\" & $image & ".png"), $X, $Y) Then
 	return True
