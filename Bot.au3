@@ -98,6 +98,8 @@ $my_food_time = $my_food_time*10
 $my_spell_time = $my_spell_time*10
 $welcome_time = $welcome_time*10
 Global $total_loop = 0
+Global $DiagPos[3]
+Global $DiagAux[3]
 
 ; INITIAL ROUTINE
 ; Create console
@@ -437,7 +439,187 @@ If $cavebot Then
 				;
 				; DIAGONAL MOVEMENT
 				;
-				
+				If (($xyz_pos[0] - $aux_pos[0]) > 0) And (($xyz_pos[1] - $aux_pos[1]) > 0) Then
+					; North-West
+					If (Abs($xyz_pos[0] - $aux_pos[0])) == (Abs($xyz_pos[1] - $aux_pos[1])) Then
+						; Can walk north or west
+						$DiagPos[0] = ReadMemory($pos[0])
+						$DiagPos[1] = ReadMemory($pos[1])
+						$DiagPos[2] = ReadMemory($pos[2])
+						walk("{UP}")
+						$DiagAux[0] = ReadMemory($pos[0])
+						$DiagAux[1] = ReadMemory($pos[1])
+						$DiagAux[2] = ReadMemory($pos[2])
+						If $DiagPos[1] == $DiagAux[1] Then
+							; Didn't move
+							walk("{LEFT}")							
+						EndIf
+					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) > (Abs($xyz_pos[1] - $aux_pos[1])) Then
+						; Shortest is Y
+						$DiagPos[0] = ReadMemory($pos[0])
+						$DiagPos[1] = ReadMemory($pos[1])
+						$DiagPos[2] = ReadMemory($pos[2])
+						walk("{UP}")
+						$DiagAux[0] = ReadMemory($pos[0])
+						$DiagAux[1] = ReadMemory($pos[1])
+						$DiagAux[2] = ReadMemory($pos[2])
+						If $DiagPos[1] == $DiagAux[1] Then
+							; Didn't move
+							walk("{LEFT}")							
+						EndIf
+					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) < (Abs($xyz_pos[1] - $aux_pos[1])) Then
+						; Shortest is X
+						$DiagPos[0] = ReadMemory($pos[0])
+						$DiagPos[1] = ReadMemory($pos[1])
+						$DiagPos[2] = ReadMemory($pos[2])
+						walk("{LEFT}")
+						$DiagAux[0] = ReadMemory($pos[0])
+						$DiagAux[1] = ReadMemory($pos[1])
+						$DiagAux[2] = ReadMemory($pos[2])
+						If $DiagPos[1] == $DiagAux[1] Then
+							; Didn't move
+							walk("{UP}")							
+						EndIf
+					Else
+						Console("Lost in North-West")
+						WriteLog("Lost in North-West")
+					EndIf
+				ElseIf (($xyz_pos[0] - $aux_pos[0]) < 0) And (($xyz_pos[0] - $aux_pos[0]) < 0) Then
+					; North-East
+					If (Abs($xyz_pos[0] - $aux_pos[0])) == (Abs($xyz_pos[1] - $aux_pos[1])) Then
+						; Can walk north or east
+						$DiagPos[0] = ReadMemory($pos[0])
+						$DiagPos[1] = ReadMemory($pos[1])
+						$DiagPos[2] = ReadMemory($pos[2])
+						walk("{UP}")
+						$DiagAux[0] = ReadMemory($pos[0])
+						$DiagAux[1] = ReadMemory($pos[1])
+						$DiagAux[2] = ReadMemory($pos[2])
+						If $DiagPos[1] == $DiagAux[1] Then
+							; Didn't move
+							walk("{RIGHT}")							
+						EndIf
+					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) > (Abs($xyz_pos[1] - $aux_pos[1])) Then
+						; Shortest is Y
+						$DiagPos[0] = ReadMemory($pos[0])
+						$DiagPos[1] = ReadMemory($pos[1])
+						$DiagPos[2] = ReadMemory($pos[2])
+						walk("{UP}")
+						$DiagAux[0] = ReadMemory($pos[0])
+						$DiagAux[1] = ReadMemory($pos[1])
+						$DiagAux[2] = ReadMemory($pos[2])
+						If $DiagPos[1] == $DiagAux[1] Then
+							; Didn't move
+							walk("{RIGHT}")							
+						EndIf
+					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) < (Abs($xyz_pos[1] - $aux_pos[1])) Then
+						; Shortest is X
+						$DiagPos[0] = ReadMemory($pos[0])
+						$DiagPos[1] = ReadMemory($pos[1])
+						$DiagPos[2] = ReadMemory($pos[2])
+						walk("{RIGHT}")
+						$DiagAux[0] = ReadMemory($pos[0])
+						$DiagAux[1] = ReadMemory($pos[1])
+						$DiagAux[2] = ReadMemory($pos[2])
+						If $DiagPos[1] == $DiagAux[1] Then
+							; Didn't move
+							walk("{UP}")							
+						EndIf
+					Else
+						Console("Lost in North-East")
+						WriteLog("Lost in North-East")
+					EndIf
+				ElseIf	(($xyz_pos[0] - $aux_pos[0]) < 0) And (($xyz_pos[1] - $aux_pos[1]) < 0) Then
+					; South-East
+					If (Abs($xyz_pos[0] - $aux_pos[0])) == (Abs($xyz_pos[1] - $aux_pos[1])) Then
+						; Can walk south or east
+						$DiagPos[0] = ReadMemory($pos[0])
+						$DiagPos[1] = ReadMemory($pos[1])
+						$DiagPos[2] = ReadMemory($pos[2])
+						walk("{DOWN}")
+						$DiagAux[0] = ReadMemory($pos[0])
+						$DiagAux[1] = ReadMemory($pos[1])
+						$DiagAux[2] = ReadMemory($pos[2])
+						If $DiagPos[1] == $DiagAux[1] Then
+							; Didn't move
+							walk("{RIGHT}")							
+						EndIf
+					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) > (Abs($xyz_pos[1] - $aux_pos[1])) Then
+						; Shortest is Y
+						$DiagPos[0] = ReadMemory($pos[0])
+						$DiagPos[1] = ReadMemory($pos[1])
+						$DiagPos[2] = ReadMemory($pos[2])
+						walk("{DOWN}")
+						$DiagAux[0] = ReadMemory($pos[0])
+						$DiagAux[1] = ReadMemory($pos[1])
+						$DiagAux[2] = ReadMemory($pos[2])
+						If $DiagPos[1] == $DiagAux[1] Then
+							; Didn't move
+							walk("{RIGHT}")							
+						EndIf
+					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) < (Abs($xyz_pos[1] - $aux_pos[1])) Then
+						; Shortest is X
+						$DiagPos[0] = ReadMemory($pos[0])
+						$DiagPos[1] = ReadMemory($pos[1])
+						$DiagPos[2] = ReadMemory($pos[2])
+						walk("{RIGHT}")
+						$DiagAux[0] = ReadMemory($pos[0])
+						$DiagAux[1] = ReadMemory($pos[1])
+						$DiagAux[2] = ReadMemory($pos[2])
+						If $DiagPos[1] == $DiagAux[1] Then
+							; Didn't move
+							walk("{DOWN}")							
+						EndIf
+					Else
+						Console("Lost in South-East")
+						WriteLog("Lost in South-East")
+					EndIf
+				Else
+					; South-West
+					If (Abs($xyz_pos[0] - $aux_pos[0])) == (Abs($xyz_pos[1] - $aux_pos[1])) Then
+						; Can walk south or west
+						$DiagPos[0] = ReadMemory($pos[0])
+						$DiagPos[1] = ReadMemory($pos[1])
+						$DiagPos[2] = ReadMemory($pos[2])
+						walk("{DOWN}")
+						$DiagAux[0] = ReadMemory($pos[0])
+						$DiagAux[1] = ReadMemory($pos[1])
+						$DiagAux[2] = ReadMemory($pos[2])
+						If $DiagPos[1] == $DiagAux[1] Then
+							; Didn't move
+							walk("{LEFT}")							
+						EndIf
+					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) > (Abs($xyz_pos[1] - $aux_pos[1])) Then
+						; Shortest is Y
+						$DiagPos[0] = ReadMemory($pos[0])
+						$DiagPos[1] = ReadMemory($pos[1])
+						$DiagPos[2] = ReadMemory($pos[2])
+						walk("{DOWN}")
+						$DiagAux[0] = ReadMemory($pos[0])
+						$DiagAux[1] = ReadMemory($pos[1])
+						$DiagAux[2] = ReadMemory($pos[2])
+						If $DiagPos[1] == $DiagAux[1] Then
+							; Didn't move
+							walk("{LEFT}")							
+						EndIf
+					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) < (Abs($xyz_pos[1] - $aux_pos[1])) Then
+						; Shortest is X
+						$DiagPos[0] = ReadMemory($pos[0])
+						$DiagPos[1] = ReadMemory($pos[1])
+						$DiagPos[2] = ReadMemory($pos[2])
+						walk("{LEFT}")
+						$DiagAux[0] = ReadMemory($pos[0])
+						$DiagAux[1] = ReadMemory($pos[1])
+						$DiagAux[2] = ReadMemory($pos[2])
+						If $DiagPos[1] == $DiagAux[1] Then
+							; Didn't move
+							walk("{DOWN}")							
+						EndIf
+					Else
+						Console("Lost in South-West")
+						WriteLog("Lost in South-West")
+					EndIf
+				EndIf
 			Else
 				;
 				; STRAIGHT MOVEMENT
@@ -446,7 +628,6 @@ If $cavebot Then
 					; There's x difference
 					If (($xyz_pos[0] - $aux_pos[0]) > 0) Then
 						; left
-						WriteLog("L: " & $xyz_pos[0] & "," & $xyz_pos[1] & "," & $xyz_pos[2] & " / " & $aux_pos[0] & "," & $aux_pos[1] & "," & $aux_pos[2])
 						walk("{LEFT}")
 						$refresh_X = ReadMemory($pos[0])
 						$refresh_Y = ReadMemory($pos[1])
@@ -456,7 +637,6 @@ If $cavebot Then
 						EndIf
 					Else
 						; right
-						WriteLog("R: " & $xyz_pos[0] & "," & $xyz_pos[1] & "," & $xyz_pos[2] & " / " & $aux_pos[0] & "," & $aux_pos[1] & "," & $aux_pos[2])
 						walk("{RIGHT}")
 						$refresh_X = ReadMemory($pos[0])
 						$refresh_Y = ReadMemory($pos[1])
@@ -470,7 +650,6 @@ If $cavebot Then
 					; There's y difference
 					If (($xyz_pos[1] - $aux_pos[1]) > 0) Then
 						; north
-						WriteLog("N: " & $xyz_pos[0] & "," & $xyz_pos[1] & "," & $xyz_pos[2] & " / " & $aux_pos[0] & "," & $aux_pos[1] & "," & $aux_pos[2])
 						walk("{UP}")
 						$refresh_X = ReadMemory($pos[0])
 						$refresh_Y = ReadMemory($pos[1])
@@ -480,7 +659,6 @@ If $cavebot Then
 						EndIf
 					Else
 						; south
-						WriteLog("S: " & $xyz_pos[0] & "," & $xyz_pos[1] & "," & $xyz_pos[2] & " / " & $aux_pos[0] & "," & $aux_pos[1] & "," & $aux_pos[2])
 						walk("{DOWN}")
 						$refresh_X = ReadMemory($pos[0])
 						$refresh_Y = ReadMemory($pos[1])
