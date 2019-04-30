@@ -94,6 +94,8 @@ $welcome_msg[4] = ":D"
 Global $xyz_pos[3]
 Global $aux_pos[3]
 Global $file_i = 1
+$my_food_time = $my_food_time*10
+$my_spell_time = $my_spell_time*10
 $welcome_time = $welcome_time*10
 Global $total_loop = 0
 
@@ -189,206 +191,16 @@ Console("Ready, Keys: END(quit) & HOME(Start bot).")
 ; DEFAULT ROUTINE
 While $botting
 	While $running
-		; ALERTS
-		If $alerts Then
-			If NOT find("battle_list") Then
-				If $logout Then
-					Send("^q")
-				EndIf
-				If $welcome Then
-					If $my_welcome_time >= $welcome_time Then
-						$msg_num = Random(0, 4, 1)
-						Send($welcome_msg[$msg_num] & "{ENTER}")
-						$my_welcome_time = 0
-					EndIf
-				EndIf
-			EndIf
-		EndIf
-
-		; EAT FOOD
-		If $eatfood Then
-			If $my_food_time >= $food_time Then
-				If find($food) Then
-					Console("Found food.")
-					MouseMove($refXY[0], $refXY[1], 1)
-					MouseClick("right", $refXY[0], $refXY[1], 1, 1)
-					$my_food_time = 0
-				EndIf
-			EndIf
-		EndIf
-
-		; RUNEMAKER
-		If $runemaker Then
-			If $my_spell_time == $spell_time Then
-				If NOT $move_blanks Then
-					Send($spell & "{ENTER}")
-				Else
-					If NOT findpos("empty_hand", $HandXY[0], $HandXY[1]) Then
-						MouseClickDrag("left", $HandXY[0], $HandXY[1], $DiscardXY[0], $DiscardXY[1], 1)
-					EndIf
-					If findpos("blank_rune", $blank_runesXY[0], $blank_runesXY[1]) AND findpos("empty_hand", $HandXY[0], $HandXY[1]) Then
-						MouseClickDrag("left", $blank_runesXY[0], $blank_runesXY[1], $HandXY[0], $HandXY[1], 1)
-						If NOT find("empty_hand") Then
-							Send($spell & "{ENTER}")
-						EndIf
-					EndIf
-				EndIf
-			EndIf
-		EndIf
-
-		; TARGETING
-		If $targeting Then
-			If $atkmode = "Atk" Then
-				If find("atk") Then
-					MouseClick("left", $refXY[0], $refXY[1], 1, 1)
-				EndIf
-			ElseIf $atkmode = "Bal" Then
-				If find("bal") Then
-					MouseClick("left", $refXY[0], $refXY[1], 1, 1)
-				EndIf
-			ElseIf $atkmode = "Def" Then
-				If find("def") Then
-					MouseClick("left", $refXY[0], $refXY[1], 1, 1)
-				EndIf
-			EndIf
-
-			If $chase Then
-				If find("chase") Then
-					MouseClick("left", $refXY[0], $refXY[1], 1, 1)
-				EndIf
-			Else
-				If find("stay") Then
-					MouseClick("left", $refXY[0], $refXY[1], 1, 1)
-				EndIf
-			EndIf
-
-			$looped = False
-			While Not find("battle_list")
-				; Monsters
-				If find("\monsters\troll") Then
-					WriteLog("Attacking target")
-					Console("Attacking target")
-					MouseClick("left", $refXY[0], $refXY[1], 1, 1)
-					MouseMove($self[0], $self[1], 1)
-					While ((Not find("battle_list")) And (find("\monsters\troll_attack")))
-						MouseMove($self[0], $self[1], 1)
-					WEnd
-				Else
-					Console("Something on screen")
-				EndIf
-				; End of monster
-			WEnd
-			If find("battle_list") Then
-				If $looped Then
-					; LOOTING
-					Console("Looting")
-					If find("blood") Then
-						MouseClick("right", $refXY[0], $refXY[1], 1, 1)
-						$loot = PixelSearch(1741, 573, 1919, 1036, 0xffe047)
-						If Not @error Then
-							MouseClickDrag("left", $loot[0], $loot[1], $bpgoldXY[0], $bpgoldXY[1], 1)
-							Send("{ENTER}")
-						EndIf
-					EndIf
-					$looped = False
-				EndIf
-			EndIf
-		EndIf
-
-		; CAVEBOT
-		If $cavebot Then
-			$xyz_pos[0] = ReadMemory($pos[0])
-			$xyz_pos[1] = ReadMemory($pos[1])
-			$xyz_pos[2] = ReadMemory($pos[2])
-			$myline = FileReadLine($secondaryfile, $file_i)
-			If @error Then
-				WriteLog("Setting i to 1")
-				$file_i = 1
-				CleanWaypoints(FileReadLine($secondaryfile, $file_i))
-			Else
-				CleanWaypoints($myline)
-			EndIf
-
-			; Check direction
-			$testedtimes = 0
-			Console("Checking direction")
-			If (($xyz_pos[0] == $aux_pos[0]) And ($xyz_pos[1] == $aux_pos[1]) And ($xyz_pos[2] == $aux_pos[2])) Then
-				$file_i = $file_i + 1
-			EndIf
-			While Not (($xyz_pos[0] == $aux_pos[0]) And ($xyz_pos[1] == $aux_pos[1]) And ($xyz_pos[2] == $aux_pos[2]))
-				If Not find("battle_list") Then
-					ExitLoop
-				EndIf
-				WriteLog("WHILE: " & $xyz_pos[0] & "," & $xyz_pos[1] & "," & $xyz_pos[2] & " / " & $aux_pos[0] & "," & $aux_pos[1] & "," & $aux_pos[2])
-				$xyz_pos[0] = ReadMemory($pos[0])
-				$xyz_pos[1] = ReadMemory($pos[1])
-				$xyz_pos[2] = ReadMemory($pos[2])
-				If ($xyz_pos[0] <> $aux_pos[0]) And ($xyz_pos[1] <> $aux_pos[1]) And ($xyz_pos[2] <> $aux_pos[2]) Then
-					; Teleported
-					player_trapped()
-				Else
-					;
-					; STRAIGHT MOVEMENT
-					;
-					If (($xyz_pos[0] - $aux_pos[0]) <> 0) Then
-						; There's x difference
-						If (($xyz_pos[0] - $aux_pos[0]) > 0) Then
-							; left
-							WriteLog("L: " & $xyz_pos[0] & "," & $xyz_pos[1] & "," & $xyz_pos[2] & " / " & $aux_pos[0] & "," & $aux_pos[1] & "," & $aux_pos[2])
-							walk("{LEFT}")
-							$refresh_X = ReadMemory($pos[0])
-							$refresh_Y = ReadMemory($pos[1])
-							$refresh_Z = ReadMemory($pos[2])
-							If $refresh_X == $aux_pos[0] And $refresh_Y == $aux_pos[1] And $refresh_Z == $aux_pos[2] Then
-								$file_i = $file_i + 1
-							EndIf
-						Else
-							; right
-							WriteLog("R: " & $xyz_pos[0] & "," & $xyz_pos[1] & "," & $xyz_pos[2] & " / " & $aux_pos[0] & "," & $aux_pos[1] & "," & $aux_pos[2])
-							walk("{RIGHT}")
-							$refresh_X = ReadMemory($pos[0])
-							$refresh_Y = ReadMemory($pos[1])
-							$refresh_Z = ReadMemory($pos[2])
-							If $refresh_X == $aux_pos[0] And $refresh_Y == $aux_pos[1] And $refresh_Z == $aux_pos[2] Then
-								$file_i = $file_i + 1
-							EndIf
-						EndIf
-					EndIf
-					If (($xyz_pos[1] - $aux_pos[1]) <> 0) Then
-						; There's y difference
-						If (($xyz_pos[1] - $aux_pos[1]) > 0) Then
-							; north
-							WriteLog("N: " & $xyz_pos[0] & "," & $xyz_pos[1] & "," & $xyz_pos[2] & " / " & $aux_pos[0] & "," & $aux_pos[1] & "," & $aux_pos[2])
-							walk("{UP}")
-							$refresh_X = ReadMemory($pos[0])
-							$refresh_Y = ReadMemory($pos[1])
-							$refresh_Z = ReadMemory($pos[2])
-							If $refresh_X == $aux_pos[0] And $refresh_Y == $aux_pos[1] And $refresh_Z == $aux_pos[2] Then
-								$file_i = $file_i + 1
-							EndIf
-						Else
-							; south
-							WriteLog("S: " & $xyz_pos[0] & "," & $xyz_pos[1] & "," & $xyz_pos[2] & " / " & $aux_pos[0] & "," & $aux_pos[1] & "," & $aux_pos[2])
-							walk("{DOWN}")
-							$refresh_X = ReadMemory($pos[0])
-							$refresh_Y = ReadMemory($pos[1])
-							$refresh_Z = ReadMemory($pos[2])
-							If $refresh_X == $aux_pos[0] And $refresh_Y == $aux_pos[1] And $refresh_Z == $aux_pos[2] Then
-								$file_i = $file_i + 1
-							EndIf
-						EndIf
-					EndIf
-					$testedtimes = $testedtimes + 1
-					If $testedtimes > $trapcount Then
-						player_trapped()
-					EndIf
-				EndIf
-			WEnd
-		EndIf
+		falerts()
+		feat()
+		frunemaker()
+		ftargeting()		
+		fcavebot()	
 
 		If Not $cavebot Then
 			Sleep(100)
 		EndIf
+		
 		$my_food_time = $my_food_time + 1
 		$my_spell_time = $my_spell_time + 1
 		$my_welcome_time = $my_welcome_time + 1
@@ -396,10 +208,6 @@ While $botting
 		Console($total_loop)
 	WEnd
 WEnd
-
-
-
-
 
 ; FUNCTIONS ROUTINE
 Func walk($direction)
@@ -480,4 +288,215 @@ $hProc = _WinAPI_OpenProcess(0x1F0FFF, False, $hProcess)
 _WinAPI_ReadProcessMemory($hProc, $addr, DllStructGetPtr($pBuf), DllStructGetSize($pBuf), $iRead)
 
 Return DllStructGetData($pBuf, 1)
+EndFunc
+
+Func falerts()
+If $alerts Then
+	If NOT find("battle_list") Then
+		If $logout Then
+			Send("^q")
+		EndIf
+		If $welcome Then
+			If $my_welcome_time >= $welcome_time Then
+				$msg_num = Random(0, 4, 1)
+				Send($welcome_msg[$msg_num] & "{ENTER}")
+				$my_welcome_time = 0
+			EndIf
+		EndIf
+	EndIf
+EndIf
+EndFunc
+
+Func feat()
+If $eatfood Then
+	If $my_food_time >= $food_time Then
+		If find($food) Then
+			Console("Found food.")
+			MouseMove($refXY[0], $refXY[1], 1)
+			MouseClick("right", $refXY[0], $refXY[1], 1, 1)
+			$my_food_time = 0
+		EndIf
+	EndIf
+EndIf
+EndFunc
+
+Func frunemaker()
+If $runemaker Then
+	If $my_spell_time >= $spell_time Then
+		If NOT $move_blanks Then
+			Send($spell & "{ENTER}")
+		Else
+			If NOT findpos("empty_hand", $HandXY[0], $HandXY[1]) Then
+				MouseClickDrag("left", $HandXY[0], $HandXY[1], $DiscardXY[0], $DiscardXY[1], 1)
+			EndIf
+			If findpos("blank_rune", $blank_runesXY[0], $blank_runesXY[1]) AND findpos("empty_hand", $HandXY[0], $HandXY[1]) Then
+				MouseClickDrag("left", $blank_runesXY[0], $blank_runesXY[1], $HandXY[0], $HandXY[1], 1)
+				If NOT find("empty_hand") Then
+					Send($spell & "{ENTER}")
+				EndIf
+			EndIf
+		EndIf
+	EndIf
+EndIf
+EndFunc
+
+Func ftargeting
+If $targeting Then
+	If $atkmode = "Atk" Then
+		If find("atk") Then
+			MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+		EndIf
+	ElseIf $atkmode = "Bal" Then
+		If find("bal") Then
+			MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+		EndIf
+	ElseIf $atkmode = "Def" Then
+		If find("def") Then
+			MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+		EndIf
+	EndIf
+	If $chase Then
+		If find("chase") Then
+			MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+		EndIf
+	Else
+		If find("stay") Then
+			MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+		EndIf
+	EndIf
+	$looped = False
+	While Not find("battle_list")
+		; Monsters
+		If find("\monsters\troll") Then
+			WriteLog("Attacking target")
+			Console("Attacking target")
+			MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+			MouseMove($self[0], $self[1], 1)
+			While ((Not find("battle_list")) And (find("\monsters\troll_attack")))
+				MouseMove($self[0], $self[1], 1)
+			WEnd
+		Else
+			Console("Something on screen")
+		EndIf
+		; End of monster
+	WEnd
+	If find("battle_list") Then
+		If $looped Then
+			; LOOTING
+			Console("Looting")
+			If find("blood") Then
+				MouseClick("right", $refXY[0], $refXY[1], 1, 1)
+				$loot = PixelSearch(1741, 573, 1919, 1036, 0xffe047)
+				If Not @error Then
+					MouseClickDrag("left", $loot[0], $loot[1], $bpgoldXY[0], $bpgoldXY[1], 1)
+					Send("{ENTER}")
+				EndIf
+			EndIf
+			$looped = False
+		EndIf
+	EndIf
+EndIf
+EndFunc
+
+Func fcavebot()
+If $cavebot Then
+	$xyz_pos[0] = ReadMemory($pos[0])
+	$xyz_pos[1] = ReadMemory($pos[1])
+	$xyz_pos[2] = ReadMemory($pos[2])
+	$myline = FileReadLine($secondaryfile, $file_i)
+	If @error Then
+		WriteLog("Setting i to 1")
+		$file_i = 1
+		CleanWaypoints(FileReadLine($secondaryfile, $file_i))
+	Else
+		CleanWaypoints($myline)
+	EndIf
+	; Check direction
+	$testedtimes = 0
+	Console("Checking direction")
+	; We are ok, move to next waypoint
+	If (($xyz_pos[0] == $aux_pos[0]) And ($xyz_pos[1] == $aux_pos[1]) And ($xyz_pos[2] == $aux_pos[2])) Then
+		$file_i = $file_i + 1
+	EndIf
+	; Walking needed
+	While Not (($xyz_pos[0] == $aux_pos[0]) And ($xyz_pos[1] == $aux_pos[1]) And ($xyz_pos[2] == $aux_pos[2]))
+		; Don't keep looping if there's something on target
+		If Not find("battle_list") Then
+			ExitLoop
+		EndIf
+		
+		; Update xyz actual coords
+		$xyz_pos[0] = ReadMemory($pos[0])
+		$xyz_pos[1] = ReadMemory($pos[1])
+		$xyz_pos[2] = ReadMemory($pos[2])
+		If ($xyz_pos[0] <> $aux_pos[0]) And ($xyz_pos[1] <> $aux_pos[1]) And ($xyz_pos[2] <> $aux_pos[2]) Then
+			; Teleported
+			player_trapped()
+		Else
+			If (($xyz_pos[0] - $aux_pos[0]) <> 0) And (($xyz_pos[1] - $aux_pos[1]) <> 0) Then
+				;
+				; DIAGONAL MOVEMENT
+				;
+				
+			Else
+				;
+				; STRAIGHT MOVEMENT
+				;
+				If (($xyz_pos[0] - $aux_pos[0]) <> 0) Then
+					; There's x difference
+					If (($xyz_pos[0] - $aux_pos[0]) > 0) Then
+						; left
+						WriteLog("L: " & $xyz_pos[0] & "," & $xyz_pos[1] & "," & $xyz_pos[2] & " / " & $aux_pos[0] & "," & $aux_pos[1] & "," & $aux_pos[2])
+						walk("{LEFT}")
+						$refresh_X = ReadMemory($pos[0])
+						$refresh_Y = ReadMemory($pos[1])
+						$refresh_Z = ReadMemory($pos[2])
+						If $refresh_X == $aux_pos[0] And $refresh_Y == $aux_pos[1] And $refresh_Z == $aux_pos[2] Then
+							$file_i = $file_i + 1
+						EndIf
+					Else
+						; right
+						WriteLog("R: " & $xyz_pos[0] & "," & $xyz_pos[1] & "," & $xyz_pos[2] & " / " & $aux_pos[0] & "," & $aux_pos[1] & "," & $aux_pos[2])
+						walk("{RIGHT}")
+						$refresh_X = ReadMemory($pos[0])
+						$refresh_Y = ReadMemory($pos[1])
+						$refresh_Z = ReadMemory($pos[2])
+						If $refresh_X == $aux_pos[0] And $refresh_Y == $aux_pos[1] And $refresh_Z == $aux_pos[2] Then
+							$file_i = $file_i + 1
+						EndIf
+					EndIf
+				EndIf				
+				If (($xyz_pos[1] - $aux_pos[1]) <> 0) Then
+					; There's y difference
+					If (($xyz_pos[1] - $aux_pos[1]) > 0) Then
+						; north
+						WriteLog("N: " & $xyz_pos[0] & "," & $xyz_pos[1] & "," & $xyz_pos[2] & " / " & $aux_pos[0] & "," & $aux_pos[1] & "," & $aux_pos[2])
+						walk("{UP}")
+						$refresh_X = ReadMemory($pos[0])
+						$refresh_Y = ReadMemory($pos[1])
+						$refresh_Z = ReadMemory($pos[2])
+						If $refresh_X == $aux_pos[0] And $refresh_Y == $aux_pos[1] And $refresh_Z == $aux_pos[2] Then
+							$file_i = $file_i + 1
+						EndIf
+					Else
+						; south
+						WriteLog("S: " & $xyz_pos[0] & "," & $xyz_pos[1] & "," & $xyz_pos[2] & " / " & $aux_pos[0] & "," & $aux_pos[1] & "," & $aux_pos[2])
+						walk("{DOWN}")
+						$refresh_X = ReadMemory($pos[0])
+						$refresh_Y = ReadMemory($pos[1])
+						$refresh_Z = ReadMemory($pos[2])
+						If $refresh_X == $aux_pos[0] And $refresh_Y == $aux_pos[1] And $refresh_Z == $aux_pos[2] Then
+							$file_i = $file_i + 1
+						EndIf
+					EndIf
+				EndIf
+			EndIf
+			
+			$testedtimes = $testedtimes + 1
+			If $testedtimes > $trapcount Then
+				player_trapped()
+			EndIf
+		EndIf
+	WEnd
+EndIf
 EndFunc
