@@ -124,10 +124,7 @@ EndIf
 If $recording Then
 	If Not FileExists($filename) Then
 		FileOpen($filename, 2)
-		FileWriteLine($filename, "[MONSTERS]")
-		FileWriteLine($filename, "img\monsters\rat.png")
-		FileWriteLine($filename, "[LOOT]")
-		FileWriteLine($filename, "img\loot\gold.png")
+		FileWriteLine($filename, "[TIBIA-BASICBOT]")
 		FileWriteLine($filename, "[WAYPOINTS]")
 		$xyz_pos[0] = ReadMemory($pos[0])
 		$xyz_pos[1] = ReadMemory($pos[1])
@@ -158,7 +155,7 @@ If $cavebot Then
 		Console("Cutting files")
 		WriteLog("Cutting files")
 		$secondaryfile = StringSplit($filename,".")
-		$secondaryfile = $secondaryfile[0] & "wp.txt"
+		$secondaryfile = $secondaryfile[1] & "wp.txt"
 		FileOpen($secondaryfile, 2)
 		FileOpen($filename, 0)
 		$found = False
@@ -196,13 +193,13 @@ While $botting
 		falerts()
 		feat()
 		frunemaker()
-		ftargeting()		
-		fcavebot()	
+		ftargeting()
+		fcavebot()
 
 		If Not $cavebot Then
 			Sleep(100)
 		EndIf
-		
+
 		$my_food_time = $my_food_time + 1
 		$my_spell_time = $my_spell_time + 1
 		$my_welcome_time = $my_welcome_time + 1
@@ -427,7 +424,7 @@ If $cavebot Then
 		If Not find("battle_list") Then
 			ExitLoop
 		EndIf
-		
+
 		; Update xyz actual coords
 		$xyz_pos[0] = ReadMemory($pos[0])
 		$xyz_pos[1] = ReadMemory($pos[1])
@@ -453,7 +450,7 @@ If $cavebot Then
 						$DiagAux[2] = ReadMemory($pos[2])
 						If $DiagPos[1] == $DiagAux[1] Then
 							; Didn't move
-							walk("{LEFT}")							
+							walk("{LEFT}")
 						EndIf
 					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) > (Abs($xyz_pos[1] - $aux_pos[1])) Then
 						; Shortest is Y
@@ -466,7 +463,7 @@ If $cavebot Then
 						$DiagAux[2] = ReadMemory($pos[2])
 						If $DiagPos[1] == $DiagAux[1] Then
 							; Didn't move
-							walk("{LEFT}")							
+							walk("{LEFT}")
 						EndIf
 					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) < (Abs($xyz_pos[1] - $aux_pos[1])) Then
 						; Shortest is X
@@ -479,7 +476,7 @@ If $cavebot Then
 						$DiagAux[2] = ReadMemory($pos[2])
 						If $DiagPos[1] == $DiagAux[1] Then
 							; Didn't move
-							walk("{UP}")							
+							walk("{UP}")
 						EndIf
 					Else
 						Console("Lost in North-West")
@@ -498,7 +495,7 @@ If $cavebot Then
 						$DiagAux[2] = ReadMemory($pos[2])
 						If $DiagPos[1] == $DiagAux[1] Then
 							; Didn't move
-							walk("{RIGHT}")							
+							walk("{RIGHT}")
 						EndIf
 					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) > (Abs($xyz_pos[1] - $aux_pos[1])) Then
 						; Shortest is Y
@@ -511,7 +508,7 @@ If $cavebot Then
 						$DiagAux[2] = ReadMemory($pos[2])
 						If $DiagPos[1] == $DiagAux[1] Then
 							; Didn't move
-							walk("{RIGHT}")							
+							walk("{RIGHT}")
 						EndIf
 					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) < (Abs($xyz_pos[1] - $aux_pos[1])) Then
 						; Shortest is X
@@ -524,7 +521,7 @@ If $cavebot Then
 						$DiagAux[2] = ReadMemory($pos[2])
 						If $DiagPos[1] == $DiagAux[1] Then
 							; Didn't move
-							walk("{UP}")							
+							walk("{UP}")
 						EndIf
 					Else
 						Console("Lost in North-East")
@@ -543,7 +540,7 @@ If $cavebot Then
 						$DiagAux[2] = ReadMemory($pos[2])
 						If $DiagPos[1] == $DiagAux[1] Then
 							; Didn't move
-							walk("{RIGHT}")							
+							walk("{RIGHT}")
 						EndIf
 					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) > (Abs($xyz_pos[1] - $aux_pos[1])) Then
 						; Shortest is Y
@@ -556,7 +553,7 @@ If $cavebot Then
 						$DiagAux[2] = ReadMemory($pos[2])
 						If $DiagPos[1] == $DiagAux[1] Then
 							; Didn't move
-							walk("{RIGHT}")							
+							walk("{RIGHT}")
 						EndIf
 					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) < (Abs($xyz_pos[1] - $aux_pos[1])) Then
 						; Shortest is X
@@ -569,7 +566,7 @@ If $cavebot Then
 						$DiagAux[2] = ReadMemory($pos[2])
 						If $DiagPos[1] == $DiagAux[1] Then
 							; Didn't move
-							walk("{DOWN}")							
+							walk("{DOWN}")
 						EndIf
 					Else
 						Console("Lost in South-East")
@@ -588,7 +585,7 @@ If $cavebot Then
 						$DiagAux[2] = ReadMemory($pos[2])
 						If $DiagPos[1] == $DiagAux[1] Then
 							; Didn't move
-							walk("{LEFT}")							
+							walk("{LEFT}")
 						EndIf
 					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) > (Abs($xyz_pos[1] - $aux_pos[1])) Then
 						; Shortest is Y
@@ -601,7 +598,7 @@ If $cavebot Then
 						$DiagAux[2] = ReadMemory($pos[2])
 						If $DiagPos[1] == $DiagAux[1] Then
 							; Didn't move
-							walk("{LEFT}")							
+							walk("{LEFT}")
 						EndIf
 					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) < (Abs($xyz_pos[1] - $aux_pos[1])) Then
 						; Shortest is X
@@ -614,7 +611,7 @@ If $cavebot Then
 						$DiagAux[2] = ReadMemory($pos[2])
 						If $DiagPos[1] == $DiagAux[1] Then
 							; Didn't move
-							walk("{DOWN}")							
+							walk("{DOWN}")
 						EndIf
 					Else
 						Console("Lost in South-West")
@@ -646,7 +643,7 @@ If $cavebot Then
 							$file_i = $file_i + 1
 						EndIf
 					EndIf
-				EndIf				
+				EndIf
 				If (($xyz_pos[1] - $aux_pos[1]) <> 0) Then
 					; There's y difference
 					If (($xyz_pos[1] - $aux_pos[1]) > 0) Then
@@ -670,7 +667,7 @@ If $cavebot Then
 					EndIf
 				EndIf
 			EndIf
-			
+
 			$testedtimes = $testedtimes + 1
 			If $testedtimes > $trapcount Then
 				player_trapped()
