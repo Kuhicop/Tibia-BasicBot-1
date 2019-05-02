@@ -88,6 +88,11 @@ $lootXY[0] = 1741
 $lootXY[1] = 574
 $lootXY[2] = 1918
 $lootXY[3] = 1036
+Global $fulllootXY[4]
+$fulllootXY[0] = 1742
+$fulllootXY[1] = 514
+$fulllootXY[2] = 1919
+$fulllootXY[3] = 1037
 Global $lhand[2]
 $lhand[0] = 1763
 $lhand[1] = 354
@@ -437,10 +442,10 @@ EndFunc
 
 Func ftargeting()
 If $targeting Then
-	While (Not find("battle_list")); or (thereisgold())
+	While Not find("battle_list"); or (thereisgold())
 		If $refillammo Then
 			If findpos("empty_arrow", $auxX, $auxY) Then
-				If FindArea("arrow", $lootXY[0], $lootXY[1], $lootXY[2], $lootXY[3]) Then
+				If FindArea("arrow", $fulllootXY[0], $fulllootXY[1], $fulllootXY[2], $fulllootXY[3]) Then
 					MouseClickDrag("left", $refXY[0], $refXY[1], $auxX, $auxY, 5)
 					Sleep(300)
 					Send("{ENTER}")
@@ -483,7 +488,6 @@ If $targeting Then
 				EndIf
 			WEnd
 			While $attacking
-				WriteLog("Found open corpse pos")
 				MouseClick("right", ($pixelq[0]+30), ($pixelq[1]+30), 1, 10)
 				Sleep(200)
 				thereisgold()
@@ -500,7 +504,7 @@ Func fcavebot()
 If $cavebot Then
 	If $refillammo Then
 		If findpos("empty_arrow", $auxX, $auxY) Then
-			If FindArea("arrow", $lootXY[0], $lootXY[1], $lootXY[2], $lootXY[3]) Then
+			If FindArea("arrow", $fulllootXY[0], $fulllootXY[1], $fulllootXY[2], $fulllootXY[3]) Then
 				MouseClickDrag("left", $refXY[0], $refXY[1], $auxX, $auxY, 5)
 				Sleep(300)
 				Send("{ENTER}")
@@ -518,12 +522,13 @@ If $cavebot Then
 	Else
 		CleanWaypoints($myline)
 	EndIf
-	
+
 	If $aux_pos[2] == "R" Then
 		If find("rope") Then
 			MouseClick("right", $refXY[0], $refXY[1], 1, 5)
+			MouseClick("left", $aux_pos[0], $aux_pos[1], 1, 5)
 		EndIf
-	Else	
+	Else
 		; Check direction
 		$testedtimes = 0
 		; We are ok or move to next waypoint
