@@ -433,7 +433,7 @@ If $targeting Then
 	While (Not find("battle_list")); or (thereisgold())
 		If $refillammo Then
 			If findpos("empty_arrow", $auxX, $auxY) Then
-				If find("arrow") Then
+				If FindArea("arrow", $lootXY[0], $lootXY[1], $lootXY[2], $lootXY[3]) Then
 					MouseClickDrag("left", $refXY[0], $refXY[1], $auxX, $auxY, 5)
 					Sleep(300)
 					Send("{ENTER}")
@@ -466,7 +466,7 @@ If $targeting Then
 						MouseClick("left", $refXY[0], $refXY[1], 1, 1)
 					EndIf
 				EndIf
-				$pixelq = PixelSearch(($self[0]-250), ($self[1]-250), ($self[0]+250), ($self[1]+250), 0xFF0000, 1)
+				$pixelq = PixelSearch(($self[0]-50), ($self[1]-50), ($self[0]+50), ($self[1]+50), 0xFF0000, 1)
 				If Not @error Then
 					$attacking = True
 					$lootXY[0] = $pixelq[0]
@@ -491,6 +491,16 @@ EndFunc
 
 Func fcavebot()
 If $cavebot Then
+	If $refillammo Then
+		If findpos("empty_arrow", $auxX, $auxY) Then
+			If FindArea("arrow", $lootXY[0], $lootXY[1], $lootXY[2], $lootXY[3]) Then
+				MouseClickDrag("left", $refXY[0], $refXY[1], $auxX, $auxY, 5)
+				Sleep(300)
+				Send("{ENTER}")
+			EndIf
+		EndIf
+	EndIf
+
 	$xyz_pos[0] = ReadMemory($pos[0])
 	$xyz_pos[1] = ReadMemory($pos[1])
 	$xyz_pos[2] = ReadMemory($pos[2])
