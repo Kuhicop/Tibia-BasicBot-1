@@ -13,7 +13,7 @@ $resolutionY = 1080
 
 ; Game
 Global $EXE_full_name = "WATclient-DX9.exe"
-Global $window_name = "Khazix - WeAreTibia"
+Global $window_name = "Camille - WeAreTibia"
 
 ; Coords
 Global $self[2]
@@ -40,13 +40,13 @@ Global $welcome_time = 30
 
 ; Food
 Global $eatfood = True
-Global $food_time = 15
-Global $food = "Meat"
+Global $food_time = 60
+Global $foodname = "mushroom"
 
 ; Runemaker
 Global $runemaker = True
-Global $spell = "utevo lux"
-Global $spell_time = 15
+Global $spell = "exevo con"
+Global $spell_time = 30
 Global $move_blanks = False
 Global $DiscardXY[2]
 ; X/Y coords where the completed runes will be thrown
@@ -57,6 +57,7 @@ $DiscardXY[1] = 0
 ; Cavebot
 Global $cavebot = True
 Global $recording = False
+Global $refillammo = True
 Global $filename = "trolls_carlin.txt"
 Global $trapcount = 20000
 Global $pos[3]
@@ -67,13 +68,32 @@ $pos[2] = 0x98F6A4
 ; Targeting
 Global $targeting = True
 Global $atkmode = "Atk" ; Atk, Bal, Def
-Global $chase = True
+Global $chase = False
+Global $monster_name = "troll"
 
 ; Looting
+Global $looting_gold = False
+Global $looting_spears = False
 Global $bpgoldXY[2]
 $bpgoldXY[0] = 1768
-$bpgoldXY[1] = 548
+$bpgoldXY[1] = 608
+Global $bpgoldXY2[2]
+$bpgoldXY2[0] = 1804
+$bpgoldXY2[1] = 613
+Global $bpitemsXY[2]
+$bpitemsXY[0] = 1765
+$bpitemsXY[1] = 548
+Global $lootXY[4]
+$lootXY[0] = 1741
+$lootXY[1] = 574
+$lootXY[2] = 1918
+$lootXY[3] = 1036
+Global $lhand[2]
+$lhand[0] = 1763
+$lhand[1] = 354
 
+
+#Region setup
 ; DON'T TOUCH BELOW
 HotkeySet("{END}", "Leave")
 HotkeySet("{HOME}", "StartBotting")
@@ -100,6 +120,10 @@ $welcome_time = $welcome_time*10
 Global $total_loop = 0
 Global $DiagPos[3]
 Global $DiagAux[3]
+Global $attacking = False
+Global $myline = ""
+Global $auxX = 0
+Global $auxY = 0
 
 ; INITIAL ROUTINE
 ; Create console
@@ -152,8 +176,6 @@ If $cavebot Then
 	If Not FileExists($filename) Then
 		MsgBox(16, "ERROR", "Unable to find: " & $filename)
 	Else
-		Console("Cutting files")
-		WriteLog("Cutting files")
 		$secondaryfile = StringSplit($filename,".")
 		$secondaryfile = $secondaryfile[1] & "wp.txt"
 		FileOpen($secondaryfile, 2)
@@ -186,19 +208,18 @@ If $cavebot Then
 EndIf
 
 Console("Ready, Keys: END(quit) & HOME(Start bot).")
+#EndRegion
 
 ; DEFAULT ROUTINE
 While $botting
 	While $running
 		falerts()
-		feat()
+		feat(True)
 		frunemaker()
 		ftargeting()
 		fcavebot()
 
-		If Not $cavebot Then
-			Sleep(100)
-		EndIf
+		Sleep(100)
 
 		$my_food_time = $my_food_time + 1
 		$my_spell_time = $my_spell_time + 1
@@ -210,8 +231,9 @@ WEnd
 
 ; FUNCTIONS ROUTINE
 Func walk($direction)
+	WriteLog("Destino: " & $myline & " / " & $xyz_pos[0] & "," & $xyz_pos[1] & " = " & $direction)
 	Send($direction)
-	Sleep(50)
+	Sleep(200)
 EndFunc
 
 Func player_trapped()
@@ -222,13 +244,71 @@ Func player_trapped()
 	Leave()
 EndFunc
 
+Func FindArea($areaimg, $area1, $area2, $area3, $area4)
+	If _FindImageArea($areaimg, $area1, $area2, $area3, $area4, $refXY[0],$refXY[1]) Then
+		Return True
+	Else
+		Return False
+	EndIf
+EndFunc
+
 Func CleanWaypoints($line)
-WriteLog("Cleaning line: " & $line)
 $result = StringSplit($line, "|")
-WriteLog("CLEANING: " & $result[1] & "," & $result[2] & "," & $result[3] & "(" & $aux_pos[0] & "," & $aux_pos[1] & "," & $aux_pos[2] & ")")
 $aux_pos[0] = $result[1]
 $aux_pos[1] = $result[2]
 $aux_pos[2] = $result[3]
+EndFunc
+
+Func imtargeting()
+$pixelt = PixelSearch(($self[0]-50), ($self[1]-50), ($self[0]+50), ($self[1]+50), 0xFF0000, 1)
+If Not @error And find("monsters\" & $monster_name & "_attack") Then
+	$refXY = $pixelt
+	Return True
+Else
+	Return False
+EndIf
+EndFunc
+
+Func thereisgold()
+$goldXY = PixelSearch($lootXY[0], $lootXY[1], $lootXY[2], $lootXY[3], 0xf8c810, 1)
+If Not @error Then
+	If $looting_gold Then
+		MouseClickDrag("left", $goldXY[0], $goldXY[1], $bpgoldXY[0], $bpgoldXY[1], 5)
+		Sleep(100)
+		Send("{ENTER}")
+		Sleep(300)
+		$goldXY = PixelSearch($lootXY[0], $lootXY[1], $lootXY[2], $lootXY[3], 0xf8c810, 1)
+		If Not @error Then
+			 MouseClickDrag("left", $goldXY[0], $goldXY[1], $bpgoldXY2[0], $bpgoldXY2[1], 5)
+		EndIf
+	EndIf
+	feat(False)
+	Sleep(300)
+	If find("apple") Then
+		MouseClickDrag("left", $refXY[0], $refXY[1], $bpitemsXY[0], $bpitemsXY[1], 5)
+		Sleep(300)
+	EndIf
+	If $looting_spears Then
+		If FindArea("spear", $lootXY[0], $lootXY[1], $lootXY[2], $lootXY[3]) Then
+			MouseClickDrag("left", $refXY[0], $refXY[1], $lhand[0], $lhand[1], 5)
+			Sleep(300)
+		EndIf
+	EndIf
+	If find("bag") Then
+		Sleep(100)
+		MouseClick("right", $refXY[0], $refXY[1], 1, 5)
+		Sleep(100)
+		If $looting_spears Then
+			If FindArea("spear", $lootXY[0], $lootXY[1], $lootXY[2], $lootXY[3]) Then
+				MouseClickDrag("left", $refXY[0], $refXY[1], $lhand[0], $lhand[1], 5)
+				Sleep(300)
+			EndIf
+		EndIf
+		feat(False)
+	EndIf
+Else
+	WriteLog("Can't find gold")
+EndIf
 EndFunc
 
 Func find($image)
@@ -246,7 +326,6 @@ Func findpos($image, ByRef $X, ByRef $Y)
 If _FindImage(("img\" & $image & ".png"), $X, $Y) Then
 	return True
 Else
-	Console("Unable to find: " & $food)
 	return False
 EndIf
 EndFunc
@@ -279,6 +358,15 @@ EndIf
 Exit
 EndFunc
 
+Func pixel(ByRef $aCoord, $color)
+$aCoord = PixelSearch(0, 0, 1920, 1080, $color, 1)
+If Not @error Then
+	Return True
+Else
+	Return False
+EndIf
+EndFunc
+
 Func ReadMemory($addr)
 $hProcess = ProcessExists($EXE_full_name)
 $pBuf = DllStructCreate("int")
@@ -307,12 +395,10 @@ If $alerts Then
 EndIf
 EndFunc
 
-Func feat()
+Func feat($checktime)
 If $eatfood Then
-	If $my_food_time >= $food_time Then
-		If find($food) Then
-			Console("Found food.")
-			MouseMove($refXY[0], $refXY[1], 1)
+	If ($my_food_time >= $food_time) Or (Not $checktime) Then
+		If find($foodname) Then
 			MouseClick("right", $refXY[0], $refXY[1], 1, 1)
 			$my_food_time = 0
 		EndIf
@@ -325,6 +411,7 @@ If $runemaker Then
 	If $my_spell_time >= $spell_time Then
 		If NOT $move_blanks Then
 			Send($spell & "{ENTER}")
+			$my_spell_time = 0
 		Else
 			If NOT findpos("empty_hand", $HandXY[0], $HandXY[1]) Then
 				MouseClickDrag("left", $HandXY[0], $HandXY[1], $DiscardXY[0], $DiscardXY[1], 1)
@@ -333,6 +420,7 @@ If $runemaker Then
 				MouseClickDrag("left", $blank_runesXY[0], $blank_runesXY[1], $HandXY[0], $HandXY[1], 1)
 				If NOT find("empty_hand") Then
 					Send($spell & "{ENTER}")
+					$my_spell_time = 0
 				EndIf
 			EndIf
 		EndIf
@@ -340,61 +428,64 @@ If $runemaker Then
 EndIf
 EndFunc
 
-Func ftargeting
+Func ftargeting()
 If $targeting Then
-	If $atkmode = "Atk" Then
-		If find("atk") Then
-			MouseClick("left", $refXY[0], $refXY[1], 1, 1)
-		EndIf
-	ElseIf $atkmode = "Bal" Then
-		If find("bal") Then
-			MouseClick("left", $refXY[0], $refXY[1], 1, 1)
-		EndIf
-	ElseIf $atkmode = "Def" Then
-		If find("def") Then
-			MouseClick("left", $refXY[0], $refXY[1], 1, 1)
-		EndIf
-	EndIf
-	If $chase Then
-		If find("chase") Then
-			MouseClick("left", $refXY[0], $refXY[1], 1, 1)
-		EndIf
-	Else
-		If find("stay") Then
-			MouseClick("left", $refXY[0], $refXY[1], 1, 1)
-		EndIf
-	EndIf
-	$looped = False
-	While Not find("battle_list")
-		; Monsters
-		If find("\monsters\troll") Then
-			WriteLog("Attacking target")
-			Console("Attacking target")
-			MouseClick("left", $refXY[0], $refXY[1], 1, 1)
-			MouseMove($self[0], $self[1], 1)
-			While ((Not find("battle_list")) And (find("\monsters\troll_attack")))
-				MouseMove($self[0], $self[1], 1)
-			WEnd
-		Else
-			Console("Something on screen")
-		EndIf
-		; End of monster
-	WEnd
-	If find("battle_list") Then
-		If $looped Then
-			; LOOTING
-			Console("Looting")
-			If find("blood") Then
-				MouseClick("right", $refXY[0], $refXY[1], 1, 1)
-				$loot = PixelSearch(1741, 573, 1919, 1036, 0xffe047)
-				If Not @error Then
-					MouseClickDrag("left", $loot[0], $loot[1], $bpgoldXY[0], $bpgoldXY[1], 1)
+	While (Not find("battle_list")); or (thereisgold())
+		If $refillammo Then
+			If findpos("empty_arrow", $auxX, $auxY) Then
+				If find("arrow") Then
+					MouseClickDrag("left", $refXY[0], $refXY[1], $auxX, $auxY, 5)
+					Sleep(300)
 					Send("{ENTER}")
 				EndIf
 			EndIf
-			$looped = False
 		EndIf
-	EndIf
+		If find("\monsters\" & $monster_name) Then
+			MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+			MouseMove($self[0], $self[1], 1)
+			While find("monsters\" & $monster_name & "_attack")
+				If $atkmode = "Atk" Then
+					If find("atk") Then
+						MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+					EndIf
+				ElseIf $atkmode = "Bal" Then
+					If find("bal") Then
+						MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+					EndIf
+				ElseIf $atkmode = "Def" Then
+					If find("def") Then
+						MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+					EndIf
+				EndIf
+				If $chase Then
+					If find("chase") Then
+						MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+					EndIf
+				Else
+					If find("stay") Then
+						MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+					EndIf
+				EndIf
+				$pixelq = PixelSearch(($self[0]-250), ($self[1]-250), ($self[0]+250), ($self[1]+250), 0xFF0000, 1)
+				If Not @error Then
+					$attacking = True
+					$lootXY[0] = $pixelq[0]
+					$lootXY[1] = $pixelq[1]
+				Else
+					$attacking = False
+				EndIf
+			WEnd
+			While $attacking
+				WriteLog("Found open corpse pos")
+				MouseClick("right", ($pixelq[0]+30), ($pixelq[1]+30), 1, 10)
+				Sleep(200)
+				thereisgold()
+				Sleep(50)
+				$attacking = False
+			WEnd
+		EndIf
+	WEnd
+	$attacking = False
 EndIf
 EndFunc
 
@@ -405,7 +496,6 @@ If $cavebot Then
 	$xyz_pos[2] = ReadMemory($pos[2])
 	$myline = FileReadLine($secondaryfile, $file_i)
 	If @error Then
-		WriteLog("Setting i to 1")
 		$file_i = 1
 		CleanWaypoints(FileReadLine($secondaryfile, $file_i))
 	Else
@@ -413,266 +503,365 @@ If $cavebot Then
 	EndIf
 	; Check direction
 	$testedtimes = 0
-	Console("Checking direction")
-	; We are ok, move to next waypoint
-	If (($xyz_pos[0] == $aux_pos[0]) And ($xyz_pos[1] == $aux_pos[1]) And ($xyz_pos[2] == $aux_pos[2])) Then
-		$file_i = $file_i + 1
-	EndIf
-	; Walking needed
-	While Not (($xyz_pos[0] == $aux_pos[0]) And ($xyz_pos[1] == $aux_pos[1]) And ($xyz_pos[2] == $aux_pos[2]))
-		; Don't keep looping if there's something on target
-		If Not find("battle_list") Then
-			ExitLoop
-		EndIf
+	; We are ok or move to next waypoint
+	If (Abs($xyz_pos[0] - $aux_pos[0]) < 4) And (Abs($xyz_pos[1] - $aux_pos[1]) < 4) Then
+		; Walking needed
+		While Not (($xyz_pos[0] == $aux_pos[0]) And ($xyz_pos[1] == $aux_pos[1]) And ($xyz_pos[2] == $aux_pos[2]))
+			; Don't keep looping if there's something on target
+			If Not find("battle_list") Then
+				ExitLoop
+			EndIf
 
-		; Update xyz actual coords
-		$xyz_pos[0] = ReadMemory($pos[0])
-		$xyz_pos[1] = ReadMemory($pos[1])
-		$xyz_pos[2] = ReadMemory($pos[2])
-		If ($xyz_pos[0] <> $aux_pos[0]) And ($xyz_pos[1] <> $aux_pos[1]) And ($xyz_pos[2] <> $aux_pos[2]) Then
-			; Teleported
-			player_trapped()
-		Else
-			If (($xyz_pos[0] - $aux_pos[0]) <> 0) And (($xyz_pos[1] - $aux_pos[1]) <> 0) Then
-				;
-				; DIAGONAL MOVEMENT
-				;
-				If (($xyz_pos[0] - $aux_pos[0]) > 0) And (($xyz_pos[1] - $aux_pos[1]) > 0) Then
-					; North-West
-					If (Abs($xyz_pos[0] - $aux_pos[0])) == (Abs($xyz_pos[1] - $aux_pos[1])) Then
-						; Can walk north or west
-						$DiagPos[0] = ReadMemory($pos[0])
-						$DiagPos[1] = ReadMemory($pos[1])
-						$DiagPos[2] = ReadMemory($pos[2])
-						walk("{UP}")
-						$DiagAux[0] = ReadMemory($pos[0])
-						$DiagAux[1] = ReadMemory($pos[1])
-						$DiagAux[2] = ReadMemory($pos[2])
-						If $DiagPos[1] == $DiagAux[1] Then
-							; Didn't move
-							walk("{LEFT}")
-						EndIf
-					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) > (Abs($xyz_pos[1] - $aux_pos[1])) Then
-						; Shortest is Y
-						$DiagPos[0] = ReadMemory($pos[0])
-						$DiagPos[1] = ReadMemory($pos[1])
-						$DiagPos[2] = ReadMemory($pos[2])
-						walk("{UP}")
-						$DiagAux[0] = ReadMemory($pos[0])
-						$DiagAux[1] = ReadMemory($pos[1])
-						$DiagAux[2] = ReadMemory($pos[2])
-						If $DiagPos[1] == $DiagAux[1] Then
-							; Didn't move
-							walk("{LEFT}")
-						EndIf
-					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) < (Abs($xyz_pos[1] - $aux_pos[1])) Then
-						; Shortest is X
-						$DiagPos[0] = ReadMemory($pos[0])
-						$DiagPos[1] = ReadMemory($pos[1])
-						$DiagPos[2] = ReadMemory($pos[2])
-						walk("{LEFT}")
-						$DiagAux[0] = ReadMemory($pos[0])
-						$DiagAux[1] = ReadMemory($pos[1])
-						$DiagAux[2] = ReadMemory($pos[2])
-						If $DiagPos[1] == $DiagAux[1] Then
-							; Didn't move
+			falerts()
+			feat(True)
+			frunemaker()
+
+			; Update xyz actual coords
+			$xyz_pos[0] = ReadMemory($pos[0])
+			$xyz_pos[1] = ReadMemory($pos[1])
+			$xyz_pos[2] = ReadMemory($pos[2])
+			If ($xyz_pos[0] <> $aux_pos[0]) And ($xyz_pos[1] <> $aux_pos[1]) And ($xyz_pos[2] <> $aux_pos[2]) Then
+				; Teleported
+				player_trapped()
+			Else
+				If (($xyz_pos[0] - $aux_pos[0]) <> 0) And (($xyz_pos[1] - $aux_pos[1]) <> 0) Then
+					;
+					; DIAGONAL MOVEMENT
+					;
+					If (($xyz_pos[0] - $aux_pos[0]) > 0) And (($xyz_pos[1] - $aux_pos[1]) > 0) Then
+						; North-West
+						If (Abs($xyz_pos[0] - $aux_pos[0])) == (Abs($xyz_pos[1] - $aux_pos[1])) Then
+							; Can walk north or west
+							$DiagPos[0] = ReadMemory($pos[0])
+							$DiagPos[1] = ReadMemory($pos[1])
+							$DiagPos[2] = ReadMemory($pos[2])
 							walk("{UP}")
-						EndIf
-					Else
-						Console("Lost in North-West")
-						WriteLog("Lost in North-West")
-					EndIf
-				ElseIf (($xyz_pos[0] - $aux_pos[0]) < 0) And (($xyz_pos[0] - $aux_pos[0]) < 0) Then
-					; North-East
-					If (Abs($xyz_pos[0] - $aux_pos[0])) == (Abs($xyz_pos[1] - $aux_pos[1])) Then
-						; Can walk north or east
-						$DiagPos[0] = ReadMemory($pos[0])
-						$DiagPos[1] = ReadMemory($pos[1])
-						$DiagPos[2] = ReadMemory($pos[2])
-						walk("{UP}")
-						$DiagAux[0] = ReadMemory($pos[0])
-						$DiagAux[1] = ReadMemory($pos[1])
-						$DiagAux[2] = ReadMemory($pos[2])
-						If $DiagPos[1] == $DiagAux[1] Then
-							; Didn't move
-							walk("{RIGHT}")
-						EndIf
-					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) > (Abs($xyz_pos[1] - $aux_pos[1])) Then
-						; Shortest is Y
-						$DiagPos[0] = ReadMemory($pos[0])
-						$DiagPos[1] = ReadMemory($pos[1])
-						$DiagPos[2] = ReadMemory($pos[2])
-						walk("{UP}")
-						$DiagAux[0] = ReadMemory($pos[0])
-						$DiagAux[1] = ReadMemory($pos[1])
-						$DiagAux[2] = ReadMemory($pos[2])
-						If $DiagPos[1] == $DiagAux[1] Then
-							; Didn't move
-							walk("{RIGHT}")
-						EndIf
-					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) < (Abs($xyz_pos[1] - $aux_pos[1])) Then
-						; Shortest is X
-						$DiagPos[0] = ReadMemory($pos[0])
-						$DiagPos[1] = ReadMemory($pos[1])
-						$DiagPos[2] = ReadMemory($pos[2])
-						walk("{RIGHT}")
-						$DiagAux[0] = ReadMemory($pos[0])
-						$DiagAux[1] = ReadMemory($pos[1])
-						$DiagAux[2] = ReadMemory($pos[2])
-						If $DiagPos[1] == $DiagAux[1] Then
-							; Didn't move
+							$DiagAux[0] = ReadMemory($pos[0])
+							$DiagAux[1] = ReadMemory($pos[1])
+							$DiagAux[2] = ReadMemory($pos[2])
+							If $DiagPos[1] == $DiagAux[1] Then
+								; Didn't move
+								$DiagPos[0] = ReadMemory($pos[0])
+								$DiagPos[1] = ReadMemory($pos[1])
+								$DiagPos[2] = ReadMemory($pos[2])
+								walk("{LEFT}")
+								$DiagAux[0] = ReadMemory($pos[0])
+								$DiagAux[1] = ReadMemory($pos[1])
+								$DiagAux[2] = ReadMemory($pos[2])
+								; stuck
+								If $DiagPos[0] == $DiagAux[0] Then
+									walk("{RIGHT}")
+								EndIf
+							EndIf
+						ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) > (Abs($xyz_pos[1] - $aux_pos[1])) Then
+							; Shortest is Y
+							$DiagPos[0] = ReadMemory($pos[0])
+							$DiagPos[1] = ReadMemory($pos[1])
+							$DiagPos[2] = ReadMemory($pos[2])
 							walk("{UP}")
+							$DiagAux[0] = ReadMemory($pos[0])
+							$DiagAux[1] = ReadMemory($pos[1])
+							$DiagAux[2] = ReadMemory($pos[2])
+							If $DiagPos[1] == $DiagAux[1] Then
+								; Didn't move
+								$DiagPos[0] = ReadMemory($pos[0])
+								$DiagPos[1] = ReadMemory($pos[1])
+								$DiagPos[2] = ReadMemory($pos[2])
+								walk("{LEFT}")
+								$DiagAux[0] = ReadMemory($pos[0])
+								$DiagAux[1] = ReadMemory($pos[1])
+								$DiagAux[2] = ReadMemory($pos[2])
+								; stuck
+								If $DiagPos[0] == $DiagAux[0] Then
+									walk("{RIGHT}")
+								EndIf
+							EndIf
+						ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) < (Abs($xyz_pos[1] - $aux_pos[1])) Then
+							; Shortest is X
+							$DiagPos[0] = ReadMemory($pos[0])
+							$DiagPos[1] = ReadMemory($pos[1])
+							$DiagPos[2] = ReadMemory($pos[2])
+							walk("{LEFT}")
+							$DiagAux[0] = ReadMemory($pos[0])
+							$DiagAux[1] = ReadMemory($pos[1])
+							$DiagAux[2] = ReadMemory($pos[2])
+							If $DiagPos[0] == $DiagAux[0] Then
+								; Didn't move
+								$DiagPos[0] = ReadMemory($pos[0])
+								$DiagPos[1] = ReadMemory($pos[1])
+								$DiagPos[2] = ReadMemory($pos[2])
+								walk("{UP}")
+								$DiagAux[0] = ReadMemory($pos[0])
+								$DiagAux[1] = ReadMemory($pos[1])
+								$DiagAux[2] = ReadMemory($pos[2])
+								; stuck
+								If $DiagPos[1] == $DiagAux[1] Then
+									walk("{DOWN}")
+								EndIf
+							EndIf
+						Else
+							Console("Lost in North-West")
+							WriteLog("Lost in North-West")
 						EndIf
-					Else
-						Console("Lost in North-East")
-						WriteLog("Lost in North-East")
-					EndIf
-				ElseIf	(($xyz_pos[0] - $aux_pos[0]) < 0) And (($xyz_pos[1] - $aux_pos[1]) < 0) Then
-					; South-East
-					If (Abs($xyz_pos[0] - $aux_pos[0])) == (Abs($xyz_pos[1] - $aux_pos[1])) Then
-						; Can walk south or east
-						$DiagPos[0] = ReadMemory($pos[0])
-						$DiagPos[1] = ReadMemory($pos[1])
-						$DiagPos[2] = ReadMemory($pos[2])
-						walk("{DOWN}")
-						$DiagAux[0] = ReadMemory($pos[0])
-						$DiagAux[1] = ReadMemory($pos[1])
-						$DiagAux[2] = ReadMemory($pos[2])
-						If $DiagPos[1] == $DiagAux[1] Then
-							; Didn't move
+					ElseIf (($xyz_pos[0] - $aux_pos[0]) < 0) And (($xyz_pos[0] - $aux_pos[0]) < 0) Then
+						; North-East
+						If (Abs($xyz_pos[0] - $aux_pos[0])) == (Abs($xyz_pos[1] - $aux_pos[1])) Then
+							; Can walk north or east
+							$DiagPos[0] = ReadMemory($pos[0])
+							$DiagPos[1] = ReadMemory($pos[1])
+							$DiagPos[2] = ReadMemory($pos[2])
+							walk("{UP}")
+							$DiagAux[0] = ReadMemory($pos[0])
+							$DiagAux[1] = ReadMemory($pos[1])
+							$DiagAux[2] = ReadMemory($pos[2])
+							If $DiagPos[1] == $DiagAux[1] Then
+								; Didn't move
+								$DiagPos[0] = ReadMemory($pos[0])
+								$DiagPos[1] = ReadMemory($pos[1])
+								$DiagPos[2] = ReadMemory($pos[2])
+								walk("{RIGHT}")
+								$DiagAux[0] = ReadMemory($pos[0])
+								$DiagAux[1] = ReadMemory($pos[1])
+								$DiagAux[2] = ReadMemory($pos[2])
+								; stuck
+								If $DiagPos[0] == $DiagAux[0] Then
+									walk("{LEFT}")
+								EndIf
+							EndIf
+						ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) > (Abs($xyz_pos[1] - $aux_pos[1])) Then
+							; Shortest is Y
+							$DiagPos[0] = ReadMemory($pos[0])
+							$DiagPos[1] = ReadMemory($pos[1])
+							$DiagPos[2] = ReadMemory($pos[2])
+							walk("{UP}")
+							$DiagAux[0] = ReadMemory($pos[0])
+							$DiagAux[1] = ReadMemory($pos[1])
+							$DiagAux[2] = ReadMemory($pos[2])
+							If $DiagPos[1] == $DiagAux[1] Then
+								; Didn't move
+								$DiagPos[0] = ReadMemory($pos[0])
+								$DiagPos[1] = ReadMemory($pos[1])
+								$DiagPos[2] = ReadMemory($pos[2])
+								walk("{RIGHT}")
+								$DiagAux[0] = ReadMemory($pos[0])
+								$DiagAux[1] = ReadMemory($pos[1])
+								$DiagAux[2] = ReadMemory($pos[2])
+								; stuck
+								If $DiagPos[0] == $DiagAux[0] Then
+									walk("{LEFT}")
+								EndIf
+							EndIf
+						ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) < (Abs($xyz_pos[1] - $aux_pos[1])) Then
+							; Shortest is X
+							$DiagPos[0] = ReadMemory($pos[0])
+							$DiagPos[1] = ReadMemory($pos[1])
+							$DiagPos[2] = ReadMemory($pos[2])
 							walk("{RIGHT}")
+							$DiagAux[0] = ReadMemory($pos[0])
+							$DiagAux[1] = ReadMemory($pos[1])
+							$DiagAux[2] = ReadMemory($pos[2])
+							If $DiagPos[0] == $DiagAux[0] Then
+								; Didn't move
+								$DiagPos[0] = ReadMemory($pos[0])
+								$DiagPos[1] = ReadMemory($pos[1])
+								$DiagPos[2] = ReadMemory($pos[2])
+								walk("{UP}")
+								$DiagAux[0] = ReadMemory($pos[0])
+								$DiagAux[1] = ReadMemory($pos[1])
+								$DiagAux[2] = ReadMemory($pos[2])
+								; stuck
+								If $DiagPos[1] == $DiagAux[1] Then
+									walk("{DOWN}")
+								EndIf
+							EndIf
+						Else
+							Console("Lost in North-East")
+							WriteLog("Lost in North-East")
 						EndIf
-					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) > (Abs($xyz_pos[1] - $aux_pos[1])) Then
-						; Shortest is Y
-						$DiagPos[0] = ReadMemory($pos[0])
-						$DiagPos[1] = ReadMemory($pos[1])
-						$DiagPos[2] = ReadMemory($pos[2])
-						walk("{DOWN}")
-						$DiagAux[0] = ReadMemory($pos[0])
-						$DiagAux[1] = ReadMemory($pos[1])
-						$DiagAux[2] = ReadMemory($pos[2])
-						If $DiagPos[1] == $DiagAux[1] Then
-							; Didn't move
-							walk("{RIGHT}")
-						EndIf
-					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) < (Abs($xyz_pos[1] - $aux_pos[1])) Then
-						; Shortest is X
-						$DiagPos[0] = ReadMemory($pos[0])
-						$DiagPos[1] = ReadMemory($pos[1])
-						$DiagPos[2] = ReadMemory($pos[2])
-						walk("{RIGHT}")
-						$DiagAux[0] = ReadMemory($pos[0])
-						$DiagAux[1] = ReadMemory($pos[1])
-						$DiagAux[2] = ReadMemory($pos[2])
-						If $DiagPos[1] == $DiagAux[1] Then
-							; Didn't move
+					ElseIf	(($xyz_pos[0] - $aux_pos[0]) < 0) And (($xyz_pos[1] - $aux_pos[1]) < 0) Then
+						; South-East
+						If (Abs($xyz_pos[0] - $aux_pos[0])) == (Abs($xyz_pos[1] - $aux_pos[1])) Then
+							; Can walk south or east
+							$DiagPos[0] = ReadMemory($pos[0])
+							$DiagPos[1] = ReadMemory($pos[1])
+							$DiagPos[2] = ReadMemory($pos[2])
 							walk("{DOWN}")
+							$DiagAux[0] = ReadMemory($pos[0])
+							$DiagAux[1] = ReadMemory($pos[1])
+							$DiagAux[2] = ReadMemory($pos[2])
+							If $DiagPos[1] == $DiagAux[1] Then
+								; Didn't move
+								$DiagPos[0] = ReadMemory($pos[0])
+								$DiagPos[1] = ReadMemory($pos[1])
+								$DiagPos[2] = ReadMemory($pos[2])
+								walk("{LEFT}")
+								$DiagAux[0] = ReadMemory($pos[0])
+								$DiagAux[1] = ReadMemory($pos[1])
+								$DiagAux[2] = ReadMemory($pos[2])
+								; stuck
+								If $DiagPos[0] == $DiagAux[0] Then
+									walk("{RIGHT}")
+								EndIf
+							EndIf
+						ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) > (Abs($xyz_pos[1] - $aux_pos[1])) Then
+							; Shortest is Y
+							$DiagPos[0] = ReadMemory($pos[0])
+							$DiagPos[1] = ReadMemory($pos[1])
+							$DiagPos[2] = ReadMemory($pos[2])
+							walk("{DOWN}")
+							$DiagAux[0] = ReadMemory($pos[0])
+							$DiagAux[1] = ReadMemory($pos[1])
+							$DiagAux[2] = ReadMemory($pos[2])
+							If $DiagPos[1] == $DiagAux[1] Then
+								; Didn't move
+								$DiagPos[0] = ReadMemory($pos[0])
+								$DiagPos[1] = ReadMemory($pos[1])
+								$DiagPos[2] = ReadMemory($pos[2])
+								walk("{LEFT}")
+								$DiagAux[0] = ReadMemory($pos[0])
+								$DiagAux[1] = ReadMemory($pos[1])
+								$DiagAux[2] = ReadMemory($pos[2])
+								; stuck
+								If $DiagPos[0] == $DiagAux[0] Then
+									walk("{RIGHT}")
+								EndIf
+							EndIf
+						ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) < (Abs($xyz_pos[1] - $aux_pos[1])) Then
+							; Shortest is X
+							$DiagPos[0] = ReadMemory($pos[0])
+							$DiagPos[1] = ReadMemory($pos[1])
+							$DiagPos[2] = ReadMemory($pos[2])
+							walk("{RIGHT}")
+							$DiagAux[0] = ReadMemory($pos[0])
+							$DiagAux[1] = ReadMemory($pos[1])
+							$DiagAux[2] = ReadMemory($pos[2])
+							If $DiagPos[0] == $DiagAux[0] Then
+								; Didn't move
+								$DiagPos[0] = ReadMemory($pos[0])
+								$DiagPos[1] = ReadMemory($pos[1])
+								$DiagPos[2] = ReadMemory($pos[2])
+								walk("{DOWN}")
+								$DiagAux[0] = ReadMemory($pos[0])
+								$DiagAux[1] = ReadMemory($pos[1])
+								$DiagAux[2] = ReadMemory($pos[2])
+								; stuck
+								If $DiagPos[1] == $DiagAux[1] Then
+									walk("{UP}")
+								EndIf
+							EndIf
+						Else
+							Console("Lost in South-East")
+							WriteLog("Lost in South-East")
 						EndIf
 					Else
-						Console("Lost in South-East")
-						WriteLog("Lost in South-East")
+						; South-West
+						If (Abs($xyz_pos[0] - $aux_pos[0])) == (Abs($xyz_pos[1] - $aux_pos[1])) Then
+							; Can walk south or west
+							$DiagPos[0] = ReadMemory($pos[0])
+							$DiagPos[1] = ReadMemory($pos[1])
+							$DiagPos[2] = ReadMemory($pos[2])
+							walk("{DOWN}")
+							$DiagAux[0] = ReadMemory($pos[0])
+							$DiagAux[1] = ReadMemory($pos[1])
+							$DiagAux[2] = ReadMemory($pos[2])
+							If $DiagPos[1] == $DiagAux[1] Then
+								; Didn't move
+								$DiagPos[0] = ReadMemory($pos[0])
+								$DiagPos[1] = ReadMemory($pos[1])
+								$DiagPos[2] = ReadMemory($pos[2])
+								walk("{LEFT}")
+								$DiagAux[0] = ReadMemory($pos[0])
+								$DiagAux[1] = ReadMemory($pos[1])
+								$DiagAux[2] = ReadMemory($pos[2])
+								; stuck
+								If $DiagPos[0] == $DiagAux[0] Then
+									walk("{RIGHT}")
+								EndIf
+							EndIf
+						ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) > (Abs($xyz_pos[1] - $aux_pos[1])) Then
+							; Shortest is Y
+							$DiagPos[0] = ReadMemory($pos[0])
+							$DiagPos[1] = ReadMemory($pos[1])
+							$DiagPos[2] = ReadMemory($pos[2])
+							walk("{DOWN}")
+							$DiagAux[0] = ReadMemory($pos[0])
+							$DiagAux[1] = ReadMemory($pos[1])
+							$DiagAux[2] = ReadMemory($pos[2])
+							If $DiagPos[1] == $DiagAux[1] Then
+								; Didn't move
+								$DiagPos[0] = ReadMemory($pos[0])
+								$DiagPos[1] = ReadMemory($pos[1])
+								$DiagPos[2] = ReadMemory($pos[2])
+								walk("{LEFT}")
+								$DiagAux[0] = ReadMemory($pos[0])
+								$DiagAux[1] = ReadMemory($pos[1])
+								$DiagAux[2] = ReadMemory($pos[2])
+								; stuck
+								If $DiagPos[0] == $DiagAux[0] Then
+									walk("{RIGHT}")
+								EndIf
+							EndIf
+						ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) < (Abs($xyz_pos[1] - $aux_pos[1])) Then
+							; Shortest is X
+							$DiagPos[0] = ReadMemory($pos[0])
+							$DiagPos[1] = ReadMemory($pos[1])
+							$DiagPos[2] = ReadMemory($pos[2])
+							walk("{LEFT}")
+							$DiagAux[0] = ReadMemory($pos[0])
+							$DiagAux[1] = ReadMemory($pos[1])
+							$DiagAux[2] = ReadMemory($pos[2])
+							If $DiagPos[0] == $DiagAux[0] Then
+								; Didn't move
+								$DiagPos[0] = ReadMemory($pos[0])
+								$DiagPos[1] = ReadMemory($pos[1])
+								$DiagPos[2] = ReadMemory($pos[2])
+								walk("{UP}")
+								$DiagAux[0] = ReadMemory($pos[0])
+								$DiagAux[1] = ReadMemory($pos[1])
+								$DiagAux[2] = ReadMemory($pos[2])
+								; stuck
+								If $DiagPos[1] == $DiagAux[1] Then
+									walk("{DOWN}")
+								EndIf
+							EndIf
+						Else
+							Console("Lost in South-West")
+							WriteLog("Lost in South-West")
+						EndIf
 					EndIf
 				Else
-					; South-West
-					If (Abs($xyz_pos[0] - $aux_pos[0])) == (Abs($xyz_pos[1] - $aux_pos[1])) Then
-						; Can walk south or west
-						$DiagPos[0] = ReadMemory($pos[0])
-						$DiagPos[1] = ReadMemory($pos[1])
-						$DiagPos[2] = ReadMemory($pos[2])
-						walk("{DOWN}")
-						$DiagAux[0] = ReadMemory($pos[0])
-						$DiagAux[1] = ReadMemory($pos[1])
-						$DiagAux[2] = ReadMemory($pos[2])
-						If $DiagPos[1] == $DiagAux[1] Then
-							; Didn't move
+					;
+					; STRAIGHT MOVEMENT
+					;
+					If (($xyz_pos[0] - $aux_pos[0]) <> 0) Then
+						; There's x difference
+						If (($xyz_pos[0] - $aux_pos[0]) > 0) Then
+							; left
 							walk("{LEFT}")
+						Else
+							; right
+							walk("{RIGHT}")
 						EndIf
-					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) > (Abs($xyz_pos[1] - $aux_pos[1])) Then
-						; Shortest is Y
-						$DiagPos[0] = ReadMemory($pos[0])
-						$DiagPos[1] = ReadMemory($pos[1])
-						$DiagPos[2] = ReadMemory($pos[2])
-						walk("{DOWN}")
-						$DiagAux[0] = ReadMemory($pos[0])
-						$DiagAux[1] = ReadMemory($pos[1])
-						$DiagAux[2] = ReadMemory($pos[2])
-						If $DiagPos[1] == $DiagAux[1] Then
-							; Didn't move
-							walk("{LEFT}")
-						EndIf
-					ElseIf (Abs($xyz_pos[0] - $aux_pos[0])) < (Abs($xyz_pos[1] - $aux_pos[1])) Then
-						; Shortest is X
-						$DiagPos[0] = ReadMemory($pos[0])
-						$DiagPos[1] = ReadMemory($pos[1])
-						$DiagPos[2] = ReadMemory($pos[2])
-						walk("{LEFT}")
-						$DiagAux[0] = ReadMemory($pos[0])
-						$DiagAux[1] = ReadMemory($pos[1])
-						$DiagAux[2] = ReadMemory($pos[2])
-						If $DiagPos[1] == $DiagAux[1] Then
-							; Didn't move
+					EndIf
+					If (($xyz_pos[1] - $aux_pos[1]) <> 0) Then
+						; There's y difference
+						If (($xyz_pos[1] - $aux_pos[1]) > 0) Then
+							; north
+							walk("{UP}")
+						Else
+							; south
 							walk("{DOWN}")
 						EndIf
-					Else
-						Console("Lost in South-West")
-						WriteLog("Lost in South-West")
 					EndIf
 				EndIf
-			Else
-				;
-				; STRAIGHT MOVEMENT
-				;
-				If (($xyz_pos[0] - $aux_pos[0]) <> 0) Then
-					; There's x difference
-					If (($xyz_pos[0] - $aux_pos[0]) > 0) Then
-						; left
-						walk("{LEFT}")
-						$refresh_X = ReadMemory($pos[0])
-						$refresh_Y = ReadMemory($pos[1])
-						$refresh_Z = ReadMemory($pos[2])
-						If $refresh_X == $aux_pos[0] And $refresh_Y == $aux_pos[1] And $refresh_Z == $aux_pos[2] Then
-							$file_i = $file_i + 1
-						EndIf
-					Else
-						; right
-						walk("{RIGHT}")
-						$refresh_X = ReadMemory($pos[0])
-						$refresh_Y = ReadMemory($pos[1])
-						$refresh_Z = ReadMemory($pos[2])
-						If $refresh_X == $aux_pos[0] And $refresh_Y == $aux_pos[1] And $refresh_Z == $aux_pos[2] Then
-							$file_i = $file_i + 1
-						EndIf
-					EndIf
-				EndIf
-				If (($xyz_pos[1] - $aux_pos[1]) <> 0) Then
-					; There's y difference
-					If (($xyz_pos[1] - $aux_pos[1]) > 0) Then
-						; north
-						walk("{UP}")
-						$refresh_X = ReadMemory($pos[0])
-						$refresh_Y = ReadMemory($pos[1])
-						$refresh_Z = ReadMemory($pos[2])
-						If $refresh_X == $aux_pos[0] And $refresh_Y == $aux_pos[1] And $refresh_Z == $aux_pos[2] Then
-							$file_i = $file_i + 1
-						EndIf
-					Else
-						; south
-						walk("{DOWN}")
-						$refresh_X = ReadMemory($pos[0])
-						$refresh_Y = ReadMemory($pos[1])
-						$refresh_Z = ReadMemory($pos[2])
-						If $refresh_X == $aux_pos[0] And $refresh_Y == $aux_pos[1] And $refresh_Z == $aux_pos[2] Then
-							$file_i = $file_i + 1
-						EndIf
-					EndIf
-				EndIf
-			EndIf
 
-			$testedtimes = $testedtimes + 1
-			If $testedtimes > $trapcount Then
-				player_trapped()
+				$testedtimes = $testedtimes + 1
+				If $testedtimes > $trapcount Then
+					player_trapped()
+				EndIf
 			EndIf
-		EndIf
-	WEnd
+		WEnd
+	EndIf
+	$file_i = $file_i + 1
 EndIf
 EndFunc

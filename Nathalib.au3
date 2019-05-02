@@ -100,7 +100,16 @@ Else
 	Return False
 EndIf
 EndFunc
-#EndRegion ### END OF FIND IMAGE ###
+#EndRegion ### END OF FIND
+
+Func _FindImageArea($areaimg, $area1, $area2, $area3, $area4, ByRef $resultx, ByRef $resulty)
+$result = _ImageSearchArea($areaimg, 1, $area1, $area2, $area3, $area4, $resultx, $resulty, 0, 0)
+If $result = 1 Then
+	Return True
+Else
+	Return False
+EndIf
+EndFunc
 
 #Region ### FIND IMAGE WITH TOLERANCE START ###
 Func _FindImageWithTolerance($image, ByRef $x, ByRef $y, $tolerance, $transparency)
