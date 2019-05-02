@@ -519,11 +519,9 @@ If $cavebot Then
 		CleanWaypoints($myline)
 	EndIf
 	
-	If $aux_pos[2] == "" Then
-		If $aux_pos[3] == "R" Then
-			If find("rope") Then
-				MouseClick("right", $refXY[0], $refXY[1], 1, 5)
-			EndIf
+	If $aux_pos[2] == "R" Then
+		If find("rope") Then
+			MouseClick("right", $refXY[0], $refXY[1], 1, 5)
 		EndIf
 	Else	
 		; Check direction
