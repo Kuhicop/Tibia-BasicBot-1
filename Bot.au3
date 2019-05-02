@@ -53,6 +53,9 @@ Global $DiscardXY[2]
 ; To get your coords check this https://github.com/Kuhicop/Mouse-Coords
 $DiscardXY[0] = 0
 $DiscardXY[1] = 0
+Global $safehouse = False
+Global $housedirection = "{RIGHT}"
+Global $househidedirection = "{LEFT}"
 
 ; Cavebot
 Global $cavebot = True
@@ -69,7 +72,10 @@ $pos[2] = 0x98F6A4
 Global $targeting = True
 Global $atkmode = "Atk" ; Atk, Bal, Def
 Global $chase = False
-Global $monster_name = "troll"
+Global $mo_amount = 2
+Global $monsters[$mo_amount]
+$monsters[0] = "troll"
+$monsters[1] = "wasp"
 
 ; Looting
 Global $looting_gold = False
@@ -96,7 +102,7 @@ $fulllootXY[3] = 1037
 Global $lhand[2]
 $lhand[0] = 1763
 $lhand[1] = 354
-
+Global $houseoutpos[2]
 
 #Region setup
 ; DON'T TOUCH BELOW
@@ -129,6 +135,8 @@ Global $attacking = False
 Global $myline = ""
 Global $auxX = 0
 Global $auxY = 0
+Global $monster_name = ""
+Global $mo_amount = $mo_amount - 1
 
 ; INITIAL ROUTINE
 ; Create console
@@ -265,16 +273,6 @@ $aux_pos[1] = $result[2]
 $aux_pos[2] = $result[3]
 EndFunc
 
-Func imtargeting()
-$pixelt = PixelSearch(($self[0]-50), ($self[1]-50), ($self[0]+50), ($self[1]+50), 0xFF0000, 1)
-If Not @error And find("monsters\" & $monster_name & "_attack") Then
-	$refXY = $pixelt
-	Return True
-Else
-	Return False
-EndIf
-EndFunc
-
 Func recrope()
 $aux_pos[0] = ReadMemory($pos[0])
 $aux_pos[1] = ReadMemory($pos[1])
@@ -390,6 +388,17 @@ _WinAPI_ReadProcessMemory($hProc, $addr, DllStructGetPtr($pBuf), DllStructGetSiz
 Return DllStructGetData($pBuf, 1)
 EndFunc
 
+Func outhousepos()
+$aux_pos[0] = ReadMemory($pos[0])
+$aux_pos[1] = ReadMemory($pos[1])
+$aux_pos[2] = ReadMemory($pos[2])
+If ($aux_pos[0] == $houseoutpos[0]) And ($aux_pos[1] == $houseoutpos[1]) Then
+	Return True
+Else
+	Return False
+EndIf
+EndFunc
+
 Func falerts()
 If $alerts Then
 	If NOT find("battle_list") Then
@@ -403,6 +412,14 @@ If $alerts Then
 				$my_welcome_time = 0
 			EndIf
 		EndIf
+		If $safehouse Then
+			While outhousepos()
+				walk($househidedirection)
+			WEnd
+		EndIf
+		While Not outhousepos()
+			walk($housedirection)
+		WEnd
 	EndIf
 EndIf
 EndFunc
@@ -420,6 +437,10 @@ EndFunc
 
 Func frunemaker()
 If $runemaker Then
+	If $houseoutpos[0] == 0 Then
+		$houseoutpos[0] = ReadMemory($pos[0])
+		$houseoutpos[1] = ReadMemory($pos[1])
+	EndIf
 	If $my_spell_time >= $spell_time Then
 		If NOT $move_blanks Then
 			Send($spell & "{ENTER}")
@@ -442,59 +463,64 @@ EndFunc
 
 Func ftargeting()
 If $targeting Then
-	While Not find("battle_list"); or (thereisgold())
-		If $refillammo Then
-			If findpos("empty_arrow", $auxX, $auxY) Then
-				If FindArea("arrow", $fulllootXY[0], $fulllootXY[1], $fulllootXY[2], $fulllootXY[3]) Then
-					MouseClickDrag("left", $refXY[0], $refXY[1], $auxX, $auxY, 5)
-					Sleep(300)
-					Send("{ENTER}")
+	While Not find("battle_list")
+		$mo_i = 0
+		While ($mo_i <= $mo_amount)
+			$monster_name = $monsters[$mo_i]
+			$mo_i = $mo_i + 1
+			If $refillammo Then
+				If findpos("empty_arrow", $auxX, $auxY) Then
+					If FindArea("arrow", $fulllootXY[0], $fulllootXY[1], $fulllootXY[2], $fulllootXY[3]) Then
+						MouseClickDrag("left", $refXY[0], $refXY[1], $auxX, $auxY, 5)
+						Sleep(300)
+						Send("{ENTER}")
+					EndIf
 				EndIf
 			EndIf
-		EndIf
-		If find("\monsters\" & $monster_name) Then
-			MouseClick("left", $refXY[0], $refXY[1], 1, 1)
-			MouseMove($self[0], $self[1], 1)
-			While find("monsters\" & $monster_name & "_attack")
-				If $atkmode = "Atk" Then
-					If find("atk") Then
-						MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+			If find("\monsters\" & $monster_name) Then
+				MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+				MouseMove($self[0], $self[1], 1)
+				While find("monsters\" & $monster_name & "_attack")
+					If $atkmode = "Atk" Then
+						If find("atk") Then
+							MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+						EndIf
+					ElseIf $atkmode = "Bal" Then
+						If find("bal") Then
+							MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+						EndIf
+					ElseIf $atkmode = "Def" Then
+						If find("def") Then
+							MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+						EndIf
 					EndIf
-				ElseIf $atkmode = "Bal" Then
-					If find("bal") Then
-						MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+					If $chase Then
+						If find("chase") Then
+							MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+						EndIf
+					Else
+						If find("stay") Then
+							MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+						EndIf
 					EndIf
-				ElseIf $atkmode = "Def" Then
-					If find("def") Then
-						MouseClick("left", $refXY[0], $refXY[1], 1, 1)
+					$pixelq = PixelSearch(($self[0]-50), ($self[1]-50), ($self[0]+50), ($self[1]+50), 0xFF0000, 1)
+					If Not @error Then
+						$attacking = True
+						$lootXY[0] = $pixelq[0]
+						$lootXY[1] = $pixelq[1]
+					Else
+						$attacking = False
 					EndIf
-				EndIf
-				If $chase Then
-					If find("chase") Then
-						MouseClick("left", $refXY[0], $refXY[1], 1, 1)
-					EndIf
-				Else
-					If find("stay") Then
-						MouseClick("left", $refXY[0], $refXY[1], 1, 1)
-					EndIf
-				EndIf
-				$pixelq = PixelSearch(($self[0]-50), ($self[1]-50), ($self[0]+50), ($self[1]+50), 0xFF0000, 1)
-				If Not @error Then
-					$attacking = True
-					$lootXY[0] = $pixelq[0]
-					$lootXY[1] = $pixelq[1]
-				Else
+				WEnd
+				While $attacking
+					MouseClick("right", ($pixelq[0]+30), ($pixelq[1]+30), 1, 10)
+					Sleep(200)
+					thereisgold()
+					Sleep(50)
 					$attacking = False
-				EndIf
-			WEnd
-			While $attacking
-				MouseClick("right", ($pixelq[0]+30), ($pixelq[1]+30), 1, 10)
-				Sleep(200)
-				thereisgold()
-				Sleep(50)
-				$attacking = False
-			WEnd
-		EndIf
+				WEnd
+			EndIf
+		WEnd	
 	WEnd
 	$attacking = False
 EndIf
