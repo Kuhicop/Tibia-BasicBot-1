@@ -227,6 +227,14 @@ Console("Ready, Keys: END(quit) & HOME(Start bot).")
 ; DEFAULT ROUTINE
 While $botting
 	While $running
+		; Focus game window to start botting
+		If Not WinActivate($window_name) Then
+			Console("Error, check log.txt file.")
+			WriteLog("Unable to find game window, game is closed.")
+			Sleep(3000)
+			Exit
+		EndIf
+		
 		falerts()
 		feat(True)
 		frunemaker()
