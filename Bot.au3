@@ -508,12 +508,11 @@ If $targeting Then
 						$attacking = True
 						$lootXY[0] = $pixelq[0]
 						$lootXY[1] = $pixelq[1]
-					Else
-						$attacking = False
 					EndIf
 				WEnd
 				While $attacking
-					MouseClick("right", ($pixelq[0]+30), ($pixelq[1]+30), 1, 10)
+					Sleep(200)
+					MouseClick("right", ($pixelq[0]+30), ($pixelq[1]+30), 1, 5)
 					Sleep(200)
 					thereisgold()
 					Sleep(50)
