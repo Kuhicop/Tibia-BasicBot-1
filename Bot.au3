@@ -41,7 +41,10 @@ Global $welcome_time = 30
 ; Food
 Global $eatfood = True
 Global $food_time = 60
-Global $foodname = "mushroom"
+Global $foodname = "pos"
+Global $foodpos[2]
+$foodpos[0] = 1843
+$foodpos[1] = 609
 
 ; Runemaker
 Global $runemaker = True
@@ -256,7 +259,7 @@ WEnd
 Func walk($direction)
 	WriteLog("Destino: " & $myline & " / " & $xyz_pos[0] & "," & $xyz_pos[1] & " = " & $direction)
 	Send($direction)
-	Sleep(100)
+	Sleep(200)
 EndFunc
 
 Func player_trapped()
@@ -435,9 +438,13 @@ EndFunc
 Func feat($checktime)
 If $eatfood Then
 	If ($my_food_time >= $food_time) Or (Not $checktime) Then
-		If find($foodname) Then
-			MouseClick("right", $refXY[0], $refXY[1], 1, 1)
-			$my_food_time = 0
+		If $foodname == "pos" Then
+			MouseClick("right", $foodpos[0], $foodpos[1], 1, 5)
+		Else
+			If find($foodname) Then
+				MouseClick("right", $refXY[0], $refXY[1], 1, 1)
+				$my_food_time = 0
+			EndIf
 		EndIf
 	EndIf
 EndIf
@@ -578,6 +585,10 @@ If $cavebot Then
 
 	If $aux_pos[2] == "R" Then
 		If find("rope") Then
+			MouseClickDrag("left", $aux_pos[0], $aux_pos[1], $self[0], $self[1], 5)
+			Sleep(100)
+			Send("{ENTER}")
+			Sleep(100)
 			MouseClick("right", $refXY[0], $refXY[1], 1, 5)
 			MouseClick("left", $aux_pos[0], $aux_pos[1], 1, 5)
 			$correctline = False
@@ -589,7 +600,7 @@ If $cavebot Then
 		; Check direction
 		$testedtimes = 0
 		; We are ok or move to next waypoint
-		If (Abs($xyz_pos[0] - $aux_pos[0]) < 4) And (Abs($xyz_pos[1] - $aux_pos[1]) < 4) Then
+		If (Abs($xyz_pos[0] - $aux_pos[0]) < 4) And (Abs($xyz_pos[1] - $aux_pos[1]) < 4) And ($xyz_pos[2] == $aux_pos[2]) Then
 			; Walking needed
 			While Not (($xyz_pos[0] == $aux_pos[0]) And ($xyz_pos[1] == $aux_pos[1]) And ($xyz_pos[2] == $aux_pos[2]))
 				; Don't keep looping if there's something on target
